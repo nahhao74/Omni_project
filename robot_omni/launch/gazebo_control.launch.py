@@ -15,7 +15,7 @@ def generate_launch_description():
     pkg = get_package_share_directory('robot_omni')
 
     urdf_file = os.path.join(pkg, 'urdf', 'omni_base.urdf')
-    world_file = os.path.join(pkg, 'worlds', 'hospital_aws.world')
+    world_file = os.path.join(pkg, 'worlds', 'hospital_full.world')
     bridge_config = os.path.join(pkg, 'config', 'bridge_config.yaml')
     controller_config = os.path.join(pkg, 'config', 'configuration.yaml')
     ekf_config_path = os.path.join(pkg, 'config', 'ekf.yaml')
@@ -81,14 +81,17 @@ def generate_launch_description():
             '-topic', 'robot_description',
             '-name', 'omni_base',
             '-x','0',
-            '-y','10',
-            '-z', '0.1'
+            '-y','10.5',
+            '-z', '0.1',
+            '-R', '0.0',
+            '-P', '0.0',
+            '-Y', '-1.57'
         ],
         output='screen'
     )
 
     delayed_spawn = TimerAction(
-        period=3.0,
+        period=20.0,
         actions=[spawn_robot]
     )
 

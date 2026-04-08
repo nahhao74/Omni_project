@@ -16,13 +16,11 @@ def generate_launch_description():
     use_sim = LaunchConfiguration('use_sim')
     map_yaml_file = LaunchConfiguration('map_yaml_file')
     params_file = LaunchConfiguration('params_file')
-    DeclareLaunchArgument(
-            'autostart',
-            default_value='true',
-            description='Automatically startup the nav2 stack'),
+    autostart = LaunchConfiguration('autostart')
+    
 
     map_yaml_file_path = PathJoinSubstitution(
-        [FindPackageShare('robot_omni'), 'maps', 'hospital_map_v2.yaml']
+        [FindPackageShare('robot_omni'), 'maps', 'hospital_map_v4.yaml']
     )
 
     params_file_path = PathJoinSubstitution(
@@ -40,6 +38,7 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('start_rviz', default_value='true'),
         DeclareLaunchArgument('use_sim', default_value='true'),
+        DeclareLaunchArgument('autostart', default_value='true'),
         DeclareLaunchArgument('map_yaml_file', default_value=map_yaml_file_path),
         DeclareLaunchArgument('params_file', default_value=params_file_path),
 
@@ -52,13 +51,14 @@ def generate_launch_description():
         # 2. THÊM MỚI: Bật Nav2 Localization của hệ thống (SỬA CHỮ robot_omni THÀNH nav2_bringup)
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                PathJoinSubstitution([FindPackageShare('nav2_bringup'), 'launch', 'localization_launch.py'])
+                PathJoinSubstitution([FindPackageShare('nav2_bringup'), 'launch', 'bringup_launch.py'])
             ),
             launch_arguments={
-                'map': map_yaml_file,
-                'use_sim_time': use_sim,
-                'params_file': params_file
-            }.items(),
+            'map': map_yaml_file,
+            'use_sim_time': use_sim,
+            'params_file': params_file,
+            'autostart': autostart
+        }.items()
         ),
 
         # 3. Bật RViz2
