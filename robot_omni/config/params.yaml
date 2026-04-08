@@ -31,7 +31,7 @@ amcl:
     update_min_a: 0.2
     update_min_d: 0.25
     resample_interval: 1
-    transform_tolerance: 1.0
+    transform_tolerance: 2.0
     
     # Các hệ số nhiễu (Alpha)
     alpha1: 0.2
@@ -123,7 +123,7 @@ global_costmap:
 
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.5
+        inflation_radius: 0.75
         cost_scaling_factor: 8.0
 
 local_costmap:
@@ -156,8 +156,8 @@ local_costmap:
 
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        inflation_radius: 0.5
-        cost_scaling_factor: 5.0
+        inflation_radius: 0.75
+        cost_scaling_factor: 8.0
         
 
 planner_server:
@@ -210,8 +210,8 @@ controller_server:
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
       debug_trajectory_details: True
-      min_vel_x: -0.5
-      max_vel_x: 0.5
+      min_vel_x: -1.0
+      max_vel_x: 1.0
       min_vel_y: 0.0  
       max_vel_y: 0.0
       max_vel_theta: 1.0
@@ -276,8 +276,8 @@ velocity_smoother:
     scale_velocities: false
     feedback: "OPEN_LOOP"
     # MẢNG LÀ [X, Y, THETA]. ĐÃ MỞ KHÓA Y:
-    max_velocity: [0.5, 0.0, 1.0]     # Sửa Y thành 0.5, Theta khớp với DWB (1.0)
-    min_velocity: [-0.5, 0.0, -1.0]  # Sửa Y thành -0.5
+    max_velocity: [1.0, 0.0, 1.0]     # Sửa Y thành 0.5, Theta khớp với DWB (1.0)
+    min_velocity: [-1.0, 0.0, -1.0]  # Sửa Y thành -0.5
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
     max_accel: [2.5, 0.0, 3.2]        
@@ -317,7 +317,7 @@ collision_monitor:
       points: "[[1.0, 1.0], [1.0, -1.0], [-0.5, -1.0], [-0.5, 1.0]]"
       action_type: "slowdown"
       min_points: 4  # max_points: 3 for Humble
-      slowdown_ratio: 1.0
+      slowdown_ratio: 0.7
       visualize: True
       polygon_pub_topic: "polygon_slowdown"
       enabled: True
