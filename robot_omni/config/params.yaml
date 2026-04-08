@@ -18,7 +18,7 @@ amcl:
       x: 0.0
       y: 0.0
       z: 0.0
-      yaw: 0.0
+      yaw: -1.57
       
     # Mô hình chuyển động đa hướng cho xe Omni
     robot_model_type: "nav2_amcl::OmniMotionModel"
@@ -124,6 +124,7 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         inflation_radius: 0.5
+        cost_scaling_factor: 8.0
 
 local_costmap:
   local_costmap:
@@ -156,6 +157,8 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         inflation_radius: 0.5
+        cost_scaling_factor: 5.0
+        
 
 planner_server:
   ros__parameters:
@@ -167,7 +170,7 @@ planner_server:
     GridBased:
       plugin: "nav2_navfn_planner::NavfnPlanner"
       tolerance: 0.5
-      use_astar: false
+      use_astar: true
 
 controller_server:
   ros__parameters:
@@ -277,7 +280,7 @@ velocity_smoother:
     min_velocity: [-0.5, 0.0, -1.0]  # Sửa Y thành -0.5
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
-    max_accel: [2.5, 0.0, 3.2]        # Sửa Y thành 2.5
+    max_accel: [2.5, 0.0, 3.2]        
     max_decel: [-2.5, 0.0, -3.2]
     odom_topic: "/odometry/filtered"
     odom_duration: 0.1
@@ -314,7 +317,7 @@ collision_monitor:
       points: "[[1.0, 1.0], [1.0, -1.0], [-0.5, -1.0], [-0.5, 1.0]]"
       action_type: "slowdown"
       min_points: 4  # max_points: 3 for Humble
-      slowdown_ratio: 0.3
+      slowdown_ratio: 1.0
       visualize: True
       polygon_pub_topic: "polygon_slowdown"
       enabled: True
