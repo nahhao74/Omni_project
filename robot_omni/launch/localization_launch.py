@@ -20,7 +20,7 @@ def generate_launch_description():
     
 
     map_yaml_file_path = PathJoinSubstitution(
-        [FindPackageShare('robot_omni'), 'maps', 'hospital_map_v4.yaml']
+        [FindPackageShare('robot_omni'), 'maps', 'hospital_map_final.yaml']
     )
 
     params_file_path = PathJoinSubstitution(
