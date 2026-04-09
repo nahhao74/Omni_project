@@ -30,7 +30,7 @@ mobile_base_controller:
       wheels_radius: 0.0762 # From URDF 
       # Calculation: (Separation_X / 2) + (Separation_Y / 2)
       # From URDF: (0.488 / 2) + (0.44635 / 2) = 0.244 + 0.223175
-      sum_of_robot_center_projection_on_X_Y_axis: 0.467175 
+      sum_of_robot_center_projection_on_X_Y_axis: 0.25
       
       base_frame_offset: { x: 0.0, y: 0.0, theta: 0.0 }
   
