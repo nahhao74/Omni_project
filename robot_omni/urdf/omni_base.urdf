@@ -23,6 +23,71 @@
   <!-- PROPERTIES -->
   <!-- INCLUDES -->
   <!-- PROPERTIES -->
+  <joint name="base_rgbd_camera_joint" type="fixed">
+    <origin rpy="0.0             0.0             0.0" xyz="0.327327              0.0              0.551436"/>
+    <parent link="base_link"/>
+    <child link="base_rgbd_camera_bottom_screw_frame"/>
+  </joint>
+  <link name="base_rgbd_camera_bottom_screw_frame"/>
+  <joint name="base_rgbd_camera_link_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.010600000000000002 0.0175 0.0125"/>
+    <parent link="base_rgbd_camera_bottom_screw_frame"/>
+    <child link="base_rgbd_camera_link"/>
+  </joint>
+  <link name="base_rgbd_camera_link">
+    <visual>
+      <!-- the mesh origin is at front plate in between the two infrared camera axes -->
+      <origin rpy="1.5707963267948966 0 1.5707963267948966" xyz="0.0043 -0.0175 0"/>
+      <geometry>
+        <mesh filename="file:///opt/ros/jazzy/share/realsense2_description/meshes/d435.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 -0.0175 0"/>
+      <geometry>
+        <box size="0.02505 0.09 0.025"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <!-- The following are not reliable values, and should not be used for modeling -->
+      <mass value="0.072"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.003881243" ixy="0.0" ixz="0.0" iyy="0.000498940" iyz="0.0" izz="0.003879257"/>
+    </inertial>
+  </link>
+  <!-- camera body, with origin at bottom screw mount -->
+  <joint name="roof_rgbd_camera_joint" type="fixed">
+    <origin rpy="0.0              0.20943951023931956              0.0" xyz="0.297329              0.0              0.483197"/>
+    <parent link="base_link"/>
+    <child link="roof_rgbd_camera_bottom_screw_frame"/>
+  </joint>
+  <link name="roof_rgbd_camera_bottom_screw_frame"/>
+  <joint name="roof_rgbd_camera_link_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.010600000000000002 0.0175 0.0125"/>
+    <parent link="roof_rgbd_camera_bottom_screw_frame"/>
+    <child link="roof_rgbd_camera_link"/>
+  </joint>
+  <link name="roof_rgbd_camera_link">
+    <visual>
+      <!-- the mesh origin is at front plate in between the two infrared camera axes -->
+      <origin rpy="1.5707963267948966 0 1.5707963267948966" xyz="0.0043 -0.0175 0"/>
+      <geometry>
+        <mesh filename="file:///opt/ros/jazzy/share/realsense2_description/meshes/d435.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 -0.0175 0"/>
+      <geometry>
+        <box size="0.02505 0.09 0.025"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <!-- The following are not reliable values, and should not be used for modeling -->
+      <mass value="0.072"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.003881243" ixy="0.0" ixz="0.0" iyy="0.000498940" iyz="0.0" izz="0.003879257"/>
+    </inertial>
+  </link>
   <material name="Blue">
     <color rgba="0.0 0.0 0.8 1.0"/>
   </material>
@@ -736,5 +801,54 @@
 
 </gazebo>
 
+<link name="cameras_add_on_link">
+    <inertial>
+      <origin rpy="0.0 0.0 0.0" xyz="-0.00001132 0.04392363 0.06783541"/>
+      <mass value="3.057"/>
+      <inertia ixx="0.08241443" ixy="-0.00000558" ixz="-0.00001319" iyy="0.05540468" iyz="0.01732357" izz="0.07634613"/>
+    </inertial>
+    <visual>
+      <origin rpy="1.57 0 1.57" xyz="0 0 -0.04"/>
+      <geometry>
+        <mesh filename="file:///home/nahhao74/ros2_ws/install/omni_base_description/share/omni_base_description/meshes/cameras_add_on/cameras_add_on.stl" scale="1 1 1"/>
+      </geometry>
+      <material name="White"/>
+    </visual>
+    <collision>
+      <origin rpy="1.57 0 1.57" xyz="0 0 -0.04"/>
+      <geometry>
+        <mesh filename="file:///home/nahhao74/ros2_ws/install/omni_base_description/share/omni_base_description/meshes/cameras_add_on/cameras_add_on.stl" scale="1 1 1"/>
+      </geometry>
+      <material name="White"/>
+    </collision>
+  </link>
+  <joint name="cameras_add_on_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="cameras_add_on_link"/>
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.0"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <gazebo reference="base_rgbd_camera_link">
+      <sensor type="camera" name="camera1">
+          <always_on>1</always_on>
+          <update_rate>30.0</update_rate>
+          <visualize>true</visualize>
+          <topic>/camera/image_raw</topic>
+          <gz_frame_id>base_rgbd_camera_link</gz_frame_id>
+          <camera>
+              <horizontal_fov>1.3962634</horizontal_fov>
+              <image>
+                  <width>800</width>
+                  <height>800</height>
+                  <format>R8G8B8</format>
+              </image>
+              <clip>
+                  <near>0.02</near>
+                  <far>300</far>
+              </clip>
+          </camera>
+      </sensor>
+  </gazebo>
 
 </robot>
