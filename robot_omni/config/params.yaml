@@ -173,16 +173,23 @@ planner_server:
   ros__parameters:
     use_sim_time: true
     expected_planner_frequency: 10.0
-    
-    # 🔥 TĂNG TỪ 0.22 LÊN 0.38 (Ép A* vẽ đường đỏ cách xa góc tường ra)
     robot_radius: 0.45
-    
     planner_plugins: ["GridBased"]
 
     GridBased:
-      plugin: "nav2_navfn_planner::NavfnPlanner"
+      # 🔥 1. ĐỔI THUẬT TOÁN SANG SMAC 2D
+      plugin: "nav2_smac_planner::SmacPlanner2D"
       tolerance: 0.5
-      use_astar: true
+      allow_unknown: false
+      
+      # 🔥 2. VŨ KHÍ ÉP ĐI ĐƯỜNG THẲNG
+      # Mặc định là 2.0. Tăng lên 5.0 để bộ não hiểu rằng: 
+      # "Thà đi thẳng xa hơn một chút, còn hơn là đi chéo vào vùng sương mù gần tường!"
+      cost_travel_multiplier: 5.0   
+      
+      # 🔥 3. CHUẨN BỊ TƯ THẾ
+      # Ép xe tính toán góc thẳng đứng khi chuẩn bị vào cửa
+      use_final_approach_orientation: true
 
 controller_server:
   ros__parameters:
@@ -206,8 +213,8 @@ controller_server:
       movement_time_allowance: 2.5
     goal_checker:
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.25
-      yaw_goal_tolerance: 0.3
+      xy_goal_tolerance: 0.3
+      yaw_goal_tolerance: 0.5
       path_length_tolerance: 1.0
       stateful: True
     PathHandler:
@@ -250,7 +257,7 @@ controller_server:
       max_angular_accel: 1.5
       
       # Cấm đi lùi (Để ép xe luôn hướng mũi về phía trước)
-      allow_reversing: true
+      allow_reversing: false
 
 smoother_server:
   ros__parameters:
