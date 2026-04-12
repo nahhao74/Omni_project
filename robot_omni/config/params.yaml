@@ -108,15 +108,28 @@ global_costmap:
       height: 10
       resolution: 0.05
 
-      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+      plugins: ["static_layer", "VoxelLayer", "inflation_layer"]
 
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
-      obstacle_layer:
-        plugin: "nav2_costmap_2d::ObstacleLayer"
+      VoxelLayer:
+        plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
-        observation_sources: scan 
+        
+        # =========================================================
+        # 🔥 THÔNG SỐ KHỞI TẠO MẢNG 3D (BẮT BUỘC PHẢI CÓ CHO VOXEL)
+        # =========================================================
+        z_resolution: 0.1           # Độ cao của mỗi "cục gạch" 3D là 10cm
+        z_voxels: 15                # Xếp chồng 15 cục lên nhau (tổng chiều cao = 1.5m)
+        origin_z: 0.0               # Bắt đầu xếp gạch từ mặt đất (0.0)
+        publish_voxel_map: True     # Phóng dữ liệu 3D ra để xem trên RViz
+        mark_threshold: 0           # Mức độ nhạy (0: Cứ có điểm ảnh lọt vào là đánh dấu luôn)
+        footprint_clearing_enabled: True # Cực kỳ quan trọng: Tự xóa mây điểm kẹt dưới gầm xe
+        # =========================================================
+
+        observation_sources: scan scan_rear camera_pointcloud
+        
         scan:
           topic: /scan_front_raw
           max_obstacle_height: 2.0
@@ -124,13 +137,30 @@ global_costmap:
           marking: True
           data_type: "LaserScan"
 
+        scan_rear:
+          topic: /scan_rear_raw
+          max_obstacle_height: 2.0
+          clearing: True
+          marking: True
+          data_type: "LaserScan"
+
+        camera_pointcloud:
+          topic: /camera/points         
+          data_type: "PointCloud2"      
+          marking: True                 
+          clearing: True             
+          min_obstacle_height: 0.4    
+          max_obstacle_height: 1.5      
+          obstacle_max_range: 8.0       
+          raytrace_max_range: 9.0
+
 
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         # 🔥 TĂNG TỪ 0.55 LÊN 1.2 (Sương mù tỏa ra tít ngoài xa)
         inflation_radius: 1.0     
         # 🔥 GIẢM MẠNH TỪ 25.0 XUỐNG 3.0 (Ép A* tìm chỗ nào chi phí thấp nhất -> chính giữa hành lang)
-        cost_scaling_factor: 3.0
+        cost_scaling_factor: 8.0
 
 local_costmap:
   local_costmap:
@@ -146,15 +176,28 @@ local_costmap:
 
       # IMPORTANT for local behavior
       rolling_window: true
-      width: 3
-      height: 3
+      width: 8
+      height: 8
 
-      plugins: ["obstacle_layer", "inflation_layer"] # Thêm obstacle_layer
+      plugins: ["VoxelLayer", "inflation_layer"] # Thêm obstacle_layer
 
-      obstacle_layer:
-        plugin: "nav2_costmap_2d::ObstacleLayer"
+      VoxelLayer:
+        plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
-        observation_sources: scan
+        
+        # =========================================================
+        # 🔥 THÔNG SỐ KHỞI TẠO MẢNG 3D (BẮT BUỘC PHẢI CÓ CHO VOXEL)
+        # =========================================================
+        z_resolution: 0.1           # Độ cao của mỗi "cục gạch" 3D là 10cm
+        z_voxels: 15                # Xếp chồng 15 cục lên nhau (tổng chiều cao = 1.5m)
+        origin_z: 0.0               # Bắt đầu xếp gạch từ mặt đất (0.0)
+        publish_voxel_map: True     # Phóng dữ liệu 3D ra để xem trên RViz
+        mark_threshold: 0           # Mức độ nhạy (0: Cứ có điểm ảnh lọt vào là đánh dấu luôn)
+        footprint_clearing_enabled: True # Cực kỳ quan trọng: Tự xóa mây điểm kẹt dưới gầm xe
+        # =========================================================
+
+        observation_sources: scan scan_rear camera_pointcloud
+        
         scan:
           topic: /scan_front_raw
           max_obstacle_height: 2.0
@@ -162,6 +205,23 @@ local_costmap:
           marking: True
           data_type: "LaserScan"
 
+        scan_rear:
+          topic: /scan_rear_raw
+          max_obstacle_height: 2.0
+          clearing: True
+          marking: True
+          data_type: "LaserScan"
+
+        camera_pointcloud:
+          topic: /camera/points         
+          data_type: "PointCloud2"      
+          marking: True                 
+          clearing: True             
+          min_obstacle_height: 0.4    
+          max_obstacle_height: 1.5      
+          obstacle_max_range: 8.0       
+          raytrace_max_range: 9.0
+        
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         # 🔥 Giữ nguyên để xe tự tin chui qua khe hẹp
@@ -184,8 +244,7 @@ planner_server:
       
       # 🔥 2. VŨ KHÍ ÉP ĐI ĐƯỜNG THẲNG
       # Mặc định là 2.0. Tăng lên 5.0 để bộ não hiểu rằng: 
-      # "Thà đi thẳng xa hơn một chút, còn hơn là đi chéo vào vùng sương mù gần tường!"
-      cost_travel_multiplier: 5.0   
+      cost_travel_multiplier: 2.0
       
       # 🔥 3. CHUẨN BỊ TƯ THẾ
       # Ép xe tính toán góc thẳng đứng khi chuẩn bị vào cửa
