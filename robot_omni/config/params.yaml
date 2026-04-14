@@ -7,7 +7,7 @@ amcl:
     global_frame_id: "map"
     
     # Dữ liệu đầu vào
-    scan_topic: "scan_front_raw"
+    scan_topic: "scan_front_filtered"
     map_topic: "map"
     
     # Cài đặt ban đầu (Bật True để map hiện ra ngay lập tức)
@@ -100,9 +100,10 @@ global_costmap:
       global_frame: map
       robot_base_frame: base_link
       
-      # 🔥 THÊM DÒNG NÀY (Khai báo 4 góc xe, giả sử xe 50x50cm)
-      footprint: "[ [0.25, 0.25], [0.25, -0.25], [-0.25, -0.25], [-0.25, 0.25] ]"
+      # 🔥 BỔ SUNG DÒNG NÀY 
+      transform_tolerance: 1.0
       
+      footprint: "[ [0.25, 0.23], [0.25, -0.23], [-0.25, -0.23], [-0.25, 0.23] ]"
       rolling_window: false
       width: 10
       height: 10
@@ -123,19 +124,21 @@ global_costmap:
         z_resolution: 0.1           # Độ cao của mỗi "cục gạch" 3D là 10cm
         z_voxels: 15                # Xếp chồng 15 cục lên nhau (tổng chiều cao = 1.5m)
         origin_z: 0.0               # Bắt đầu xếp gạch từ mặt đất (0.0)
-        publish_voxel_map: True     # Phóng dữ liệu 3D ra để xem trên RViz
-        mark_threshold: 0           # Mức độ nhạy (0: Cứ có điểm ảnh lọt vào là đánh dấu luôn)
+        publish_voxel_map: False    # Phóng dữ liệu 3D ra để xem trên RViz
+        mark_threshold: 3     # Mức độ nhạy (0: Cứ có điểm ảnh lọt vào là đánh dấu luôn)
         footprint_clearing_enabled: True # Cực kỳ quan trọng: Tự xóa mây điểm kẹt dưới gầm xe
         # =========================================================
 
         observation_sources: scan scan_rear camera_pointcloud
         
         scan:
-          topic: /scan_front_raw
+          topic: /scan_front_filtered
           max_obstacle_height: 2.0
           clearing: True
           marking: True
           data_type: "LaserScan"
+          obstacle_max_range: 6.0
+          raytrace_max_range: 7.0
 
         scan_rear:
           topic: /scan_rear_raw
@@ -143,24 +146,31 @@ global_costmap:
           clearing: True
           marking: True
           data_type: "LaserScan"
+          obstacle_max_range: 6.0
+          raytrace_max_range: 7.0
 
         camera_pointcloud:
           topic: /camera/points         
           data_type: "PointCloud2"      
           marking: True                 
-          clearing: True             
-          min_obstacle_height: 0.4    
-          max_obstacle_height: 1.5      
-          obstacle_max_range: 8.0       
-          raytrace_max_range: 9.0
+          clearing: True       
+          # 🔥 TĂNG min_obstacle_height để không quét trúng sàn
+          min_obstacle_height: 0.05
+          max_obstacle_height: 1.5
+          # 🔥 Thu hẹp tầm quét để máy không bị lag do nhìn quá xa
+          obstacle_max_range: 3.0   
+          # 🔥 TĂNG tầm quét tia để xóa vật cản cũ khi xe đã đi qua
+          raytrace_max_range: 6.0
 
 
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        # 🔥 TĂNG TỪ 0.55 LÊN 1.2 (Sương mù tỏa ra tít ngoài xa)
-        inflation_radius: 1.0     
-        # 🔥 GIẢM MẠNH TỪ 25.0 XUỐNG 3.0 (Ép A* tìm chỗ nào chi phí thấp nhất -> chính giữa hành lang)
-        cost_scaling_factor: 8.0
+        
+        plugin: "nav2_costmap_2d::InflationLayer"
+        # 🔥 GIẢM XUỐNG 0.7 (Vừa đủ để bao quanh thân xe 70cm)
+        inflation_radius: 0.7     
+        # 🔥 TĂNG LÊN 3.0 để lực đẩy bớt gắt, xe dám đi vào chỗ hẹp hơn
+        cost_scaling_factor: 3.0
 
 local_costmap:
   local_costmap:
@@ -169,96 +179,120 @@ local_costmap:
       global_frame: odom
       robot_base_frame: base_link
       
-      # 🔥 THÊM DÒNG NÀY NỮA
-      footprint: "[ [0.25, 0.25], [0.25, -0.25], [-0.25, -0.25], [-0.25, 0.25] ]"
+      transform_tolerance: 0.5
       
+      footprint: "[ [0.25, 0.23], [0.25, -0.23], [-0.25, -0.23], [-0.25, 0.23] ]"
       resolution: 0.05
-
-      # IMPORTANT for local behavior
       rolling_window: true
       width: 8
       height: 8
-
-      plugins: ["VoxelLayer", "inflation_layer"] # Thêm obstacle_layer
+      plugins: ["VoxelLayer", "inflation_layer"]
 
       VoxelLayer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
+        decay_model: "linear"
+        voxel_decay: 60.0
+        z_resolution: 0.1
+        z_voxels: 15
+        origin_z: 0.0
         
-        # =========================================================
-        # 🔥 THÔNG SỐ KHỞI TẠO MẢNG 3D (BẮT BUỘC PHẢI CÓ CHO VOXEL)
-        # =========================================================
-        z_resolution: 0.1           # Độ cao của mỗi "cục gạch" 3D là 10cm
-        z_voxels: 15                # Xếp chồng 15 cục lên nhau (tổng chiều cao = 1.5m)
-        origin_z: 0.0               # Bắt đầu xếp gạch từ mặt đất (0.0)
-        publish_voxel_map: True     # Phóng dữ liệu 3D ra để xem trên RViz
-        mark_threshold: 0           # Mức độ nhạy (0: Cứ có điểm ảnh lọt vào là đánh dấu luôn)
-        footprint_clearing_enabled: True # Cực kỳ quan trọng: Tự xóa mây điểm kẹt dưới gầm xe
+        # 🔥 TẮT XUẤT 3D ĐỂ MÁY NHẸ BƯỚC, KHÔNG BỊ GIẬT
+        publish_voxel_map: False     
+        
+        mark_threshold: 3    
+        footprint_clearing_enabled: True
         # =========================================================
 
         observation_sources: scan scan_rear camera_pointcloud
         
-        scan:
-          topic: /scan_front_raw
-          max_obstacle_height: 2.0
+        can:
+          topic: /scan_front_filtered
+          # 🔥 HẠ XUỐNG 0.4: Lidar 2D chỉ quản lý một lát cắt mỏng ngang thân nó
+          min_obstacle_height: 0.1
+          max_obstacle_height: 0.4
           clearing: True
           marking: True
           data_type: "LaserScan"
+          raytrace_max_range: 3.0    
+          obstacle_max_range: 3.0
 
         scan_rear:
           topic: /scan_rear_raw
-          max_obstacle_height: 2.0
+          # 🔥 TƯƠNG TỰ CHO LIDAR SAU
+          min_obstacle_height: 0.1
+          max_obstacle_height: 0.4
           clearing: True
           marking: True
           data_type: "LaserScan"
+          raytrace_max_range: 3.0    
+          obstacle_max_range: 3.0
 
         camera_pointcloud:
           topic: /camera/points         
           data_type: "PointCloud2"      
           marking: True                 
-          clearing: True             
-          min_obstacle_height: 0.4    
-          max_obstacle_height: 1.5      
-          obstacle_max_range: 8.0       
-          raytrace_max_range: 9.0
+          clearing: True       
+          # 🔥 TĂNG min_obstacle_height để không quét trúng sàn
+          min_obstacle_height: 0.05
+          max_obstacle_height: 1.5
+          # 🔥 Thu hẹp tầm quét để máy không bị lag do nhìn quá xa
+          raytrace_max_range: 3.0    # ĐỂ BẰNG VỚI OBSTACLE
+          obstacle_max_range: 3.0
         
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        # 🔥 Giữ nguyên để xe tự tin chui qua khe hẹp
-        inflation_radius: 0.55      
-        cost_scaling_factor: 25.0
+        inflation_radius: 0.5     
+        cost_scaling_factor: 3.0
+
+scan_front_filter:
+  ros__parameters:
+    filter1:
+      name: speckle_filter
+      type: laser_filters/LaserScanSpeckleFilter
+      params:
+        filter_type: 0            # 0: Dựa trên khoảng cách (Distance)
+        max_range: 3.0            # Khoảng cách tối đa Lidar hoạt động
+        max_range_difference: 0.2 # Ngưỡng chênh lệch khoảng cách giữa các tia
+        filter_window: 3
         
 
 planner_server:
   ros__parameters:
     use_sim_time: true
     expected_planner_frequency: 10.0
-    robot_radius: 0.45
+    robot_radius: 0.35
+    
     planner_plugins: ["GridBased"]
 
     GridBased:
-      # 🔥 1. ĐỔI THUẬT TOÁN SANG SMAC 2D
       plugin: "nav2_smac_planner::SmacPlanner2D"
-      tolerance: 0.5
-      allow_unknown: false
+      tolerance: 1.0
+      allow_unknown: true
       
-      # 🔥 2. VŨ KHÍ ÉP ĐI ĐƯỜNG THẲNG
-      # Mặc định là 2.0. Tăng lên 5.0 để bộ não hiểu rằng: 
-      cost_travel_multiplier: 2.0
+      # 🔥 TĂNG MẠNH LÊN 5.0 (Thay vì 0.8)
+      # Lệnh này "phạt" cực nặng những con đường đi sát vật cản, 
+      # ép xe phải lượn ra vùng trống (giữa hành lang) để an toàn.
+      cost_travel_multiplier: 5.0  
       
-      # 🔥 3. CHUẨN BỊ TƯ THẾ
-      # Ép xe tính toán góc thẳng đứng khi chuẩn bị vào cửa
       use_final_approach_orientation: true
+      downsample_costmap: false
+      downsampling_factor: 2
 
 controller_server:
   ros__parameters:
     use_sim_time: true
     controller_frequency: 20.0
-    costmap_update_timeout: 0.3
+    
+    # 🔥 TĂNG TỪ 0.3 LÊN 1.0: Cho phép bản đồ lag 1 giây cũng không hủy
+    costmap_update_timeout: 1.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
-    failure_tolerance: 0.3
+    
+    # 🔥 TĂNG TỪ 0.3 LÊN 1.0: Cho phép thuật toán lag 1 giây mới báo lỗi
+    failure_tolerance: 1.0
+    
     odom_topic: "/odometry/filtered"
     odom_duration: 0.3
     enable_stamped_cmd_vel: True
@@ -287,13 +321,13 @@ controller_server:
       reject_unit_path: False  
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.7              # Tốc độ đi thẳng tối đa (m/s)
+      desired_linear_vel: 0.7            # Tốc độ đi thẳng tối đa (m/s)
       lookahead_dist: 0.35              # Khoảng cách quăng "củ cà rốt" về phía trước
       min_lookahead_dist: 0.2
-      max_lookahead_dist: 0.6
+      max_lookahead_dist: 0.5
       lookahead_time: 1.5
-      rotate_to_heading_angular_vel: 1.5   # Tốc độ xoay đầu tại chỗ
-      transform_tolerance: 0.1
+      rotate_to_heading_angular_vel: 1.8  # Tốc độ xoay đầu tại chỗ
+      transform_tolerance: 1.0
       
       # Các cơ chế tự động giảm tốc độ cho mượt
       use_velocity_scaled_lookahead_dist: false
@@ -311,9 +345,9 @@ controller_server:
       regulated_linear_scaling_min_speed: 0.25
       
       # 🔥 VŨ KHÍ BÍ MẬT: Đứng im xoay đầu khi góc rẽ gắt
-      use_rotate_to_heading: true 
-      rotate_to_heading_min_angle: 0.25  # ~45 độ. Lệch góc > 45 độ là xe sẽ đứng lại xoay đầu.
-      max_angular_accel: 1.5
+      use_rotate_to_heading: true
+      rotate_to_heading_min_angle: 0.2   # 🔥 tăng mạnh
+      max_angular_accel: 3.2
       
       # Cấm đi lùi (Để ép xe luôn hướng mũi về phía trước)
       allow_reversing: false
@@ -323,7 +357,7 @@ smoother_server:
     costmap_topic: global_costmap/costmap_raw
     footprint_topic: global_costmap/published_footprint
     robot_base_frame: base_link
-    transform_tolerance: 0.1
+    transform_tolerance: 1.0
     smoother_plugins: ["simple_smoother"]
     simple_smoother:
       plugin: "nav2_smoother::SimpleSmoother"
@@ -331,8 +365,8 @@ smoother_server:
       do_refinement: True
       refinement_num: 2
       max_its: 1000
-      w_data: 0.2
-      w_smooth: 0.3
+      w_data: 0.1
+      w_smooth: 0.5
       enforce_path_inversion: True
 
 velocity_smoother:
@@ -363,28 +397,28 @@ collision_monitor:
     cmd_vel_in_topic: "cmd_vel_smoothed"
     cmd_vel_out_topic: "/mobile_base_controller/reference"
     state_topic: "collision_monitor_state"
-    transform_tolerance: 0.5
+    transform_tolerance: 1.0
     source_timeout: 5.0
     base_shift_correction: True
     stop_pub_timeout: 2.0
-    enable_stamped_cmd_vel: True  # False for Jazzy or older
+    enable_stamped_cmd_vel: True
     use_realtime_priority: false
     polygons: ["PolygonStop", "PolygonSlow", "FootprintApproach"]
     PolygonStop:
       type: "circle"
       radius: 0.22
       action_type: "stop"
-      min_points: 4  # max_points: 3 for Humble
+      min_points: 4  
       visualize: True
       polygon_pub_topic: "polygon_stop"
       enabled: True
     PolygonSlow:
       type: "polygon"
-      # 🔥 BÓP CHIỀU RỘNG TỪ 1.0 XUỐNG 0.35 (Tổng rộng 70cm, vừa đủ bao bọc nhẹ ngoài thân xe)
-      points: "[[1.0, 0.35], [1.0, -0.35], [-0.5, -0.35], [-0.5, 0.35]]"
+      # 🔥 Hộp xanh đã được gọt dũa cẩn thận
+      points: "[[0.35, 0.28], [0.35, -0.28], [-0.25, -0.28], [-0.25, 0.28]]"
       action_type: "slowdown"
       min_points: 4  
-      slowdown_ratio: 0.7
+      slowdown_ratio: 0.5   
       visualize: True
       polygon_pub_topic: "polygon_slowdown"
       enabled: True
@@ -392,7 +426,7 @@ collision_monitor:
       type: "polygon"
       points: "[[0.5, 0.5], [0.5, -0.5], [-0.5, -0.5], [-0.5, 0.5]]"
       action_type: "limit"
-      min_points: 4  # max_points: 3 for Humble
+      min_points: 4  
       linear_limit: 0.4
       angular_limit: 0.5
       visualize: True
@@ -404,7 +438,7 @@ collision_monitor:
       footprint_topic: "/local_costmap/published_footprint"
       time_before_collision: 2.0
       simulation_time_step: 0.02
-      min_points: 6  # max_points: 5 for Humble
+      min_points: 6  
       visualize: False
       enabled: True
     VelocityPolygonStop:
@@ -434,9 +468,6 @@ collision_monitor:
         linear_max: 0.0
         theta_min: -1.0
         theta_max: 1.0
-      # This is the last polygon to be checked, it should cover the entire range of robot's velocities
-      # It is used as the stopped polygon when the robot is not moving and as a fallback if the velocity
-      # is not covered by any of the other sub-polygons
       stopped:
         points: "[[0.25, 0.25], [0.25, -0.25], [-0.25, -0.25], [-0.25, 0.25]]"
         linear_min: -1.0
@@ -447,12 +478,12 @@ collision_monitor:
     scan:
       source_timeout: 0.2
       type: "scan"
-      topic: "/scan_front_raw"
+      topic: /scan_front_filtered
       enabled: True
     pointcloud:
       type: "pointcloud"
       topic: "/intel_realsense_r200_depth/points"
-      transport_type: "raw"  # raw or/ with compression (zlib, draco, zstd)
+      transport_type: "raw"  
       min_height: 0.1
       max_height: 0.5
       min_range: 0.2
@@ -497,13 +528,14 @@ behavior_server:
     local_frame: odom
     global_frame: map
     robot_base_frame: base_link
-    transform_tolerance: 0.1
+    transform_tolerance: 1.0
     simulate_ahead_time: 2.0
     
     # 🔥 TĂNG ĐỒNG BỘ VỚI DWB VÀ SMOOTHER HÔM TRƯỚC
-    max_rotational_vel: 2.0     # Tăng từ 1.0 lên 2.0
+    max_rotational_vel: 1.0    # Tăng từ 1.0 lên 2.0
     min_rotational_vel: 0.4
-    rotational_acc_lim: 5.0     # Tăng từ 3.2 lên 5.0 để xe xoay đầu chớp nhoáng
+    rotational_acc_lim: 5.0 
+
     
     enable_stamped_cmd_vel: true
 lifecycle_manager_localization:
