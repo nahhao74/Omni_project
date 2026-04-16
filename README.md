@@ -1,7 +1,7 @@
 # Autonomous Omni-directional Hospital Navigation Robot
 
-**Tác giả:** [Nguyễn Anh Hào & Trần Minh Cương]  
-**Email:** [nahhao74@gmail.com]  
+**Tác giả:** Nguyễn Anh Hào & Trần Minh Cương
+**Email:** nahhao74@gmail.com
 
 ---
 
@@ -16,5 +16,5 @@ Nếu dự án này hữu ích cho nghiên cứu hoặc đồ án của bạn, v
   year = {2026},
   publisher = {GitHub},
   journal = {GitHub repository},
-  howpublished = {\url{[https://github.com/yourusername/your-repo-name](https://github.com/yourusername/your-repo-name)}}
+  howpublished = {\url{[[https://github.com/yourusername/your-repo-name](https://github.com/yourusername/your-repo-name)](https://github.com/nahhao74/Omni_project.git)}}
 }
