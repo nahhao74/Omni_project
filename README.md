@@ -12,16 +12,15 @@ Dự án này triển khai hệ thống điều hướng tự hành toàn diện
 
 1. Yêu cầu hệ thống:
 
-    Ubuntu 24.04 (Noble Numbat)
+    Ubuntu 24.04
 
-    ROS 2 Jazzy (Desktop Install)
+    ROS 2 Jazzy
 
-    Gazebo Simulator (tương thích với Jazzy)
+    Gazebo Simulator
 
-    AWS Robotic Hospital World packages
+    AWS Robotic Hospital World packages 
 
 2. Tạo Workspace và cài đặt thư viện:
-Bash
 
 - Tạo ROS 2 workspace
 mkdir -p ~/ros_ws/src
@@ -29,3 +28,13 @@ cd ~/ros_ws/src
 
 - Clone repository của dự án
 git clone https://github.com/nahhao74/Omni_project.git
+
+- Build
+colcon build
+
+- Khai báo đường dẫn
+source install/setup.bash
+
+3. Khởi chạy file launch
+
+ros2 launch robot_omni localization_launch.py
