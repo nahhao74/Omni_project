@@ -11,9 +11,13 @@ Dự án này triển khai hệ thống điều hướng tự hành toàn diện
 # ⚙️ Setup
 1. **Yêu cầu hệ thống:**
     Ubuntu 24.04
+   
     ROS 2 Jazzy
+   
     Gazebo Simulator
-    AWS Robotic Hospital World packages 
+   
+    AWS Robotic Hospital World packages
+   
 2.**Tạo Workspace và cài đặt thư viện:**
 - Tạo ROS 2 workspace
 ```bash
