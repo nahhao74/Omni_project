@@ -23,18 +23,24 @@ Dự án này triển khai hệ thống điều hướng tự hành toàn diện
 2. Tạo Workspace và cài đặt thư viện:
 
 - Tạo ROS 2 workspace
+```bash
 mkdir -p ~/ros_ws/src
 cd ~/ros_ws/src
+```
 
 - Clone repository của dự án
+```bash
 git clone https://github.com/nahhao74/Omni_project.git
-
+```
 - Build
+```bash
 colcon build
-
+```
 - Khai báo đường dẫn
+```bash
 source install/setup.bash
-
+```
 3. Khởi chạy file launch
-
+```bash
 ros2 launch robot_omni localization_launch.py
+```
