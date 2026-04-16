@@ -44,7 +44,7 @@ Smac A* Planner tính toán đường đi tối ưu nhất từ vị trí hiện
 3. Điều hướng mượt mà với MPPI & Rotation Shim Controller (Local Control)
 Rotation Shim giúp robot xoay hướng mặt về phía mục tiêu trước khi tiến. Ngay sau đó, MPPI Controller sẽ liên tục lấy mẫu hàng ngàn quỹ đạo để chọn ra hướng đi linh hoạt nhất, giúp đạt tới vị trí đích với đường đi tối ưu nhất và tránh va chạm.
 
-## 🙏 Acknowledgments (Nguồn tham khảo)
+#🙏 Acknowledgments
 
 Dự án này được phát triển dựa trên nền tảng của nhiều thư viện mã nguồn mở và tài liệu tham khảo từ cộng đồng ROS. Xin gửi lời cảm ơn đặc biệt đến:
 
