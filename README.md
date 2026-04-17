@@ -335,3 +335,8 @@ Một TF tree sai hoặc thiếu sẽ dẫn đến các lỗi nghiêm trọng nh
 Vì vậy, việc thiết kế và kiểm tra TF tree (đúng frame, đúng parent-child, đúng timestamp) là bước bắt buộc trong hệ thống robot tự hành.
 
 # Để Hình TF tree ở đây
+
+## Xây dựng bản đồ trong môi trường phức tạp (SLAM & Mapping)
+
+`ros2 launch robot_omni slam.py`
+
