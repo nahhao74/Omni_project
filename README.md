@@ -97,7 +97,7 @@ Dự án này được phát triển dựa trên nền tảng của nhiều thư
   - gz_ros2_control::GazeboSimSystem
   - gz-sim-imu-system
  
-![Robot](images/robotfull.png)
+![Robot](image/robotfull.png)
 
 
 # Xử lý tín hiệu đầu vào từ cảm biến và dữ liệu Odometry.
