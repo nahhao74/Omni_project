@@ -174,7 +174,7 @@ bridge = Node(
     package='ros_gz_bridge',
     executable='parameter_bridge',
     parameters=[{'config_file': bridge_config}, {'use_sim_time': True}],
-)```bash
+)```
 Chức năng
 Chuyển đổi message:
 LaserScan
