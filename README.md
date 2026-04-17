@@ -339,6 +339,8 @@ Vì vậy, việc thiết kế và kiểm tra TF tree (đúng frame, đúng pare
 ## Xây dựng bản đồ trong môi trường phức tạp (SLAM & Mapping)
 Trong hệ thống này, robot sử dụng các thuật toán SLAM (Simultaneous Localization and Mapping) để đồng thời xác định vị trí và xây dựng bản đồ môi trường dưới dạng Occupancy Grid 2D.
 
+![SLAM](image/scan_map.gif)
+
 Môi trường bệnh viện đặt ra nhiều thách thức:
 
 - Hành lang dài, ít đặc trưng → dễ gây sai lệch định vị
@@ -361,7 +363,6 @@ ros2 launch robot_omni slam.py
 ```
 ros2 run nav2_map_server map_saver_cli -f my_map
 ```
-![SLAM](image/scan_map.gif)
 
 ## Cấu hình các sever phục vụ cho Nav2 để tối ưu hóa quỹ đạo di chuyển và khả năng tránh vật cản động/tĩnh.
 
