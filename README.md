@@ -358,4 +358,7 @@ cd ~/ros2_ws
 source install/setup.bash
 ros2 launch robot_omni slam.py
 ```
+```
+ros2 run nav2_map_server map_saver_cli -f my_map
+```
 
