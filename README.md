@@ -33,14 +33,14 @@ Dự án này triển khai hệ thống điều hướng tự hành toàn diện
 
 ```bash
 # Tạo ROS 2 workspace
-mkdir -p ~/ros_ws/src
-cd ~/ros_ws/src
+mkdir -p ~/ros2_ws/src
+cd ~/ros2_ws/src
 
 # Clone repository của dự án
 git clone https://github.com/nahhao74/Omni_project.git
 
 # Build
-cd ~/ros_ws
+cd ~/ros2_ws
 colcon build
 
 # Khai báo đường dẫn
