@@ -584,7 +584,7 @@ Các hành động được khai báo trong config
 
 
 
-### example: robot_omni Navigation
+# Demo: robot_omni Navigation
 
 ```
 cd ros2_ws
@@ -592,11 +592,18 @@ source install/setup.bash
 ros2 launch robot_omni localization_launch.py
 ```
 
-Khởi chạy thuật toán GA để tìm khoảng cách đến các phòng theo đường đi ngắn và tối ưu nhất. 
-
-
+Khởi chạy thuật toán GA để tìm khoảng cách đến các phòng theo đường đi ngắn và tối ưu nhất. Chạy file `ros2_ws/src/robot_omni/launch/robot_patrol.py`
 **Cần phải có file :** `ros2_ws/src/robot_omni/launch/ga_path_optimizer.py` nằm trong cùng thư mục.
 
+## GUI: 
+Chạy file: `ros2_ws/src/robot_omni/launch/robot_gui_control.py` để có thể sử dụng giao diện thực hiện các chứa năng:
+- Chạy manual
+- Chạy bằng thuật toán GA
+- Chạy tuần tự các phòng
+- chạy tới phòng chỉ định.
+
+
+![Gui](image/gui.png)
 
 
 
