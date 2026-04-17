@@ -99,6 +99,18 @@ Dự án này được phát triển dựa trên nền tảng của nhiều thư
  
 ![Robot](image/robotfull.png)
 
+### 4. Đưa robot vào bệnh viện và kiểm tra Ros2 controller:
+
+```
+cd ros2_ws
+source install/setup.bash
+ros2 launch robot_omni gazebo_control.launch.py
+```
+Kiểm tra Ros2 controller
+
+```
+Ros2 control list_controllers
+```
 
 # Xử lý tín hiệu đầu vào từ cảm biến và dữ liệu Odometry.
 
