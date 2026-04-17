@@ -530,7 +530,7 @@ Các nguồn này đều được cấu hình với cả hai chức năng:
 - marking = true → thêm vật cản vào costmap
 - clearing = true → xóa vật cản khi không còn thấy
 
-# để hình 
+![planer](image/costmap.png)
 
 ## Local Costmap
 
