@@ -1,7 +1,7 @@
 # PROJECT ROBOT OMNI
 # ROS 2 Nav2: Autonomous Omni-directional Hospital Navigation Robot
 
-**Tác giả:** Nguyễn Anh Hào & Trần Minh Cương  
+**Tác giả:** Nguyễn Anh Hào - MSSV:23134015 & Trần Minh Cương - MSSV:23134007 
 **Email:** nahhao74@gmail.com , tmcuong0507@gmail.com
 
 ---
