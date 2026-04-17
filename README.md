@@ -79,10 +79,177 @@ Dự án này được phát triển dựa trên nền tảng của nhiều thư
     Để dùng được cảm biến trong Ros2 thì cần phải có plugin liên quan đến cảm biến, được khai báo trong file hospital_aws.world và hospital_full.wotld :
     
     <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
-    
-**1. Danh sách cảm biến & chức năng**
+
+# Xử lý tín hiệu đầu vào từ cảm biến và Odometry
+Hệ thống robot xử lý dữ liệu theo nhiều bước, từ cảm biến → ROS2 → bộ lọc → đưa vào SLAM / Navigation.
+
+**ổng quan luồng xử lý**
+Cảm biến (Gazebo)
+   ↓
+Bridge (chuyển sang ROS2)
+   ↓
+Topic ROS2 (/scan, /imu, /odom)
+   ↓
+Bộ lọc EKF
+   ↓
+/odometry/filtered
+   ↓
+SLAM / Navigation
+
+**1. Nhận dữ liệu từ cảm biến**
+Robot sử dụng nhiều loại cảm biến, mỗi cái có nhiệm vụ riêng:
+
 **LiDAR**
-    LiDAR là cảm biến quan trọng nhất cho navigation vì nó cung cấp thông tin khoảng cách chính xác theo dạng 2D scan.Cụ thể hệ thống của bạn dùng LiDAR để:Phát hiện vật cản, xây dựng bản đồ (SLAM), xác định vị trí (Localization), navigation thông qua cost map.
-    Project này sử dụng 2 cảm biến lidar để ao phủ góc quét 360 độ: 2D LiDAR (GPU LiDAR trong Gazebo)
-    Topic: scan_front_raw
-            scan_rear_raw
+Topic:
+/scan_front_raw
+/scan_rear_raw
+
+Dữ liệu trả về: khoảng cách từ robot tới vật cản theo từng góc
+Dùng để:
+    phát hiện vật cản
+    xây dựng bản đồ (SLAM)
+    tránh va chạm khi di chuyển
+**IMU**
+Topic: /base_imu
+
+Dữ liệu: góc quay (yaw), vận tốc góc, gia tốc
+Dùng để:
+    xác định hướng robot
+    giữ robot không bị lệch hướng
+    hỗ trợ bộ lọc EKF
+**Camera (RGB-D)**
+Topic:
+/camera/depth_image
+/camera/points
+
+Dữ liệu: ảnh độ sâu (depth), pointcloud 3D
+
+Dùng để:
+    nhận diện vật thể
+    phát hiện vật cản 3D
+    hỗ trợ LiDAR (những chỗ LiDAR không thấy)
+    
+**Odometry**
+Topic: /mobile_base_controller/odometry
+
+Dữ liệu: vận tốc robot (tiến, ngang), vận tốc quay
+
+Dùng để: ước lượng chuyển động của robot theo thời gian
+**2. Chuyển dữ liệu từ Gazebo sang ROS2**
+Trong Gazebo, dữ liệu cảm biến không dùng trực tiếp được trong ROS2 → cần bridge.
+
+Sử dụng:
+
+ros_gz_bridge parameter_bridge
+
+Được chạy trong launch :
+
+bridge = Node(
+    package='ros_gz_bridge',
+    executable='parameter_bridge',
+    parameters=[{'config_file': bridge_config}, {'use_sim_time': True}],
+)
+
+Nhiệm vụ:
+    chuyển kiểu dữ liệu:
+    LaserScan
+    IMU
+    Image
+    
+đổi từ gz topic → ROS2 topic
+**3. Đồng bộ thời gian**
+use_sim_time: true
+
+Tất cả node dùng chung:
+
+thời gian từ /clock
+
+Mục đích:
+
+tránh lệch thời gian giữa:
+LiDAR
+IMU
+Odometry
+
+**4. Lọc và kết hợp dữ liệu (EKF)**
+Node sử dụng: ekf_filter_node
+
+Được chạy trong launch :
+
+ekf_node = Node(
+    package='robot_localization',
+    executable='ekf_node',
+    name='ekf_filter_node'
+)
+
+Nguyên lý hoạt động
+
+EKF sẽ nhận dữ liệu từ: Odometry (vận tốc), IMU (góc quay)
+
+Sau đó:
+    lọc nhiễu
+    kết hợp dữ liệu
+    tính toán trạng thái robot
+Output của EKF
+Topic: /odometry/filtered
+
+=> Đây là dữ liệu quan trọng nhất để:
+
+SLAM
+Navigation
+hiển thị trên RViz
+
+**5. Đưa vào SLAM**
+
+Từ file **slam.lua** cấu hình :
+
+use_odometry = true
+use_imu_data = true
+num_laser_scans = 2
+
+Nghĩa là SLAM dùng:
+
+2 LiDAR
+IMU
+Odometry (đã qua EKF)
+✔ Mapping input
+
+Từ slam.py :
+
+('/scan_1', '/scan_front_raw'),
+('/scan_2', '/scan_rear_raw'),
+('/imu', '/base_imu'),
+('/odom', '/odometry/filtered')
+
+Tất cả dữ liệu được đưa vào SLAM để:
+xây map
+định vị robot
+**7 Đưa vào Navigation (Nav2)**
+
+Trong file launch :
+
+Nav2 sử dụng:
+
+/odometry/filtered
+/scan
+/camera/points
+bản đồ
+
+Để:
+xác định vị trí robot
+tìm đường đi
+tránh vật cản
+
+**Tổng kết luồng xử lý**
+LiDAR, Camera → môi trường
+IMU → hướng
+Odom → vận tốc
+        ↓
+      EKF
+        ↓
+/odometry/filtered
+        ↓
+SLAM / Nav2
+
+    
+
