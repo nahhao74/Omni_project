@@ -462,7 +462,7 @@ Map Server là nguồn dữ liệu môi trường, cụ thể:
     )
 ```
 
-![Robot](hospital_map_final.png)
+![map](hospital.png)
 
 ## Planner Server 
 **Planner Server** trong Nav2 là thành phần dùng để tính toán đường đi (global path) từ vị trí hiện tại của robot đến mục tiêu trên bản đồ.
