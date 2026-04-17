@@ -462,7 +462,7 @@ Map Server là nguồn dữ liệu môi trường, cụ thể:
     )
 ```
 
-![SLAM](image/hospital.png)
+![map](image/hospital.png)
 
 ## Planner Server 
 **Planner Server** trong Nav2 là thành phần dùng để tính toán đường đi (global path) từ vị trí hiện tại của robot đến mục tiêu trên bản đồ.
@@ -483,7 +483,7 @@ chạm goal → tạo path
 - Đường đi “đẹp” hơn, không zig-zag nhiều
 - Tối ưu để chạy nhanh trong ROS2
 
-# để hình.
+![planer](image/plannerpath.png)
 
 ## Controller Server
 **Controller Server** trong Nav2 là thành phần dùng để biến đường đi (path) thành chuyển động thực tế của robot.
