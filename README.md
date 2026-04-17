@@ -96,39 +96,39 @@ Bộ lọc EKF
 /odometry/filtered
       ↓
 SLAM / Navigation
-1. Nhận dữ liệu từ cảm biến
+**1. Nhận dữ liệu từ cảm biến**
 
 Robot sử dụng nhiều loại cảm biến, mỗi loại có vai trò riêng:
 
-LiDAR
+**LiDAR**
 
 Topic:
 
-/scan_front_raw
-/scan_rear_raw
+/scan_front_raw  
 
-Dữ liệu:
+/scan_rear_raw  
 
-Khoảng cách từ robot đến vật cản theo từng góc quét
+Dữ liệu: Khoảng cách từ robot đến vật cản theo từng góc quét
 
-Chức năng:
+Chức năng:  
 
 Phát hiện vật cản xung quanh robot
 Cung cấp dữ liệu cho SLAM để xây dựng bản đồ
-Hỗ trợ tránh va chạm trong quá trình di chuyển
-IMU
+Hỗ trợ tránh va chạm trong quá trình di chuyển  
 
-Topic:
+**IMU**
 
-/base_imu
+Topic:  
 
-Dữ liệu:
+/base_imu  
+
+Dữ liệu:  
 
 Góc quay (yaw)
 Vận tốc góc
 Gia tốc
 
-Chức năng:
+Chức năng:  
 
 Xác định hướng của robot
 Giữ ổn định góc quay khi robot di chuyển
