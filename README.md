@@ -1,5 +1,5 @@
-#PROJECT ROBOT OMNI
-#ROS 2 Nav2: Autonomous Omni-directional Hospital Navigation Robot
+# PROJECT ROBOT OMNI
+# ROS 2 Nav2: Autonomous Omni-directional Hospital Navigation Robot
 
 Tác giả: Nguyễn Anh Hào & Trần Minh Cương
 Email: nahhao74@gmail.com , tmcuong0507@gmail.com
@@ -62,7 +62,7 @@ Dự án này được phát triển dựa trên nền tảng của nhiều thư
     Nav2 & MPPI: https://docs.nav2.org/configuration/packages/configuring-mppic.html
     AWS Hospital World: https://github.com/aws-robotics/aws-robomaker-hospital-world.git
 
-**Xây dưng mô hình robot**
+# Xây dưng mô hình robot
 1. Hình dạng kích thước .
     Loại robot: Xe 4 bánh đa hướng (Omni/Mecanum).
     Trọng lượng và Kích thước: Phần thân chính (base_link) có khối lượng hơn 34 kg, kích thước bao phủ khoảng 0.71m x 0.49m x 0.16m. Hệ thống bánh xe: 4 bánh (trước-phải, trước-trái, sau-phải, sau-trái) được cấp lệnh vận tốc độc lập thông qua plugin gz_ros2_control.
@@ -73,8 +73,86 @@ Dự án này được phát triển dựa trên nền tảng của nhiều thư
     Cảm biến quán tính (IMU): Cập nhật dữ liệu gia tốc và góc quay liên tục ở tần số cao 100Hz, giúp bộ lọc nhiễu odometry tính toán vị trí chuẩn xác hơn khi xe thực hiện các thao tác xoay phức tạp.
 
 3. Tương thích Hệ thống
-    ROS 2 & Gazebo: File này được viết để chạy trơn tru trên các phiên bản ROS 2 mới (có tham chiếu đến đường dẫn của bản Jazzy) và sử dụng các plugin hiện đại của Gazebo mới (Ignition/gz-sim) như gz_ros2_control::GazeboSimSystem hay gz-sim-imu-system.
-Tóm lại, omni_base là một nền tảng robot xịn sò, mang hơi hướng công nghiệp. Các thông số từ cấu trúc vật lý đến cảm biến đều đã được tối ưu sẵn, tạo thành một base hoàn hảo để bạn 
-
+    ROS 2 & Gazebo: File này được viết để chạy trơn tru trên các phiên bản ROS 2 mới (có tham chiếu đến đường dẫn của bản Jazzy) và sử dụng các plugin hiện đại của Gazebo mới (Ignition/gz-sim) như **gz_ros2_control::GazeboSimSystem** hay **gz-sim-imu-system**.
 <img width="927" height="681" alt="image" src="https://github.com/user-attachments/assets/f4e3c76a-80d7-4ed1-9f35-0749ab168c47" />
+# Xử lý tín hiệu cảm biến
+    Để dùng được cảm biến trong Ros2 thì cần phải có plugin liên quan đến cảm biến, được khai báo trong file hospital_aws.world và hospital_full.wotld :
+    
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+    
+**1. Danh sách cảm biến & chức năng**
+**LiDAR**
+    LiDAR là cảm biến quan trọng nhất cho navigation vì nó cung cấp thông tin khoảng cách chính xác theo dạng 2D scan.Cụ thể hệ thống của bạn dùng LiDAR để:Phát hiện vật cản, xây dựng bản đồ (SLAM), xác định vị trí (Localization), navigation thông qua cost map. b
+    Project này sử dụng 2 cảm biến lidar để ao phủ góc quét 360 độ:
+            **Lidar trước**
+      <gazebo reference="base_front_laser_link">
+        <sensor name="base_front_laser" type="gpu_lidar">
+          <pose>0 0 0 0 0 0</pose>
+          <update_rate>10</update_rate>
+          <visualize>true</visualize>
+          <topic>scan_front_raw</topic>
+          <gz_frame_id>base_front_laser_link</gz_frame_id>
+          <ray>
+            <scan>
+              <horizontal>
+                <!-- 818 (270/0.33) steps in 270deg fov -->
+                <samples>818.0</samples>
+                <resolution>1</resolution>
+                <!-- not the sensor resolution; just 1 -->
+                <min_angle>-2.356194490192345</min_angle>
+                <max_angle>2.356194490192345</max_angle>
+              </horizontal>
+            </scan>
+            <range>
+              <min>0.05</min>
+              <max>25.0</max>
+              <resolution>0.001</resolution>
+            </range>
+            <noise>
+              <type>gaussian</type>
+              <mean>0.0</mean>
+              <stddev>0.01</stddev>
+            </noise>
+          </ray>
+        </sensor>
+        <material>Gazebo/DarkGrey</material>
+      </gazebo>
+            **Lidar sau**
+      <gazebo reference="base_rear_laser_link">
+        <sensor name="base_rear_laser" type="gpu_lidar">
+          <pose>0 0 0 0 0 0</pose>
+          <update_rate>10</update_rate>
+          <visualize>true</visualize>
+          <topic>scan_rear_raw</topic>
+          <gz_frame_id>base_rear_laser_link</gz_frame_id>
+          <ray>
+            <scan>
+              <horizontal>
+                <!-- 818 (270/0.33) steps in 270deg fov -->
+                <samples>818.0</samples>
+                <resolution>1</resolution>
+                <!-- not the sensor resolution; just 1 -->
+                <min_angle>-2.356194490192345</min_angle>
+                <max_angle>2.356194490192345</max_angle>
+              </horizontal>
+            </scan>
+            <range>
+              <min>0.05</min>
+              <max>25.0</max>
+              <resolution>0.001</resolution>
+            </range>
+            <noise>
+              <type>gaussian</type>
+              <mean>0.0</mean>
+              <stddev>0.01</stddev>
+            </noise>
+          </ray>
+        </sensor>
+        <material>Gazebo/DarkGrey</material>
+      </gazebo>
+
+
+
+    
+
 
