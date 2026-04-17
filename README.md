@@ -423,3 +423,27 @@ BT Navigator là bộ điều phối logic, cụ thể:
   - không tìm được path
   - robot bị kẹt
   - vật cản xuất hiện
+
+### Map Server
+**Map sever** trong Nav2 là thành phần dùng để cung cấp bản đồ (map) cho toàn bộ hệ thống.
+- Nguyên lý hoạt động
+- Load bản đồ từ file (.yaml + .pgm/.png)
+- Publish lên topic /map
+- Các thành phần khác (AMCL, Planner…) sẽ subscribe map này để sử dụng
+**Vai trò của Map Server trong Nav2**
+Map Server là nguồn dữ liệu môi trường, cụ thể:
+- Cung cấp bản đồ tĩnh cho robot
+- Là cơ sở để:
+  - AMCL định vị
+  - Planner lập đường
+  - Publish topic /map cho toàn hệ thống
+
+ Đổi map trong `localization_launch.py`
+ ```
+     map_yaml_file_path = PathJoinSubstitution(
+        [FindPackageShare('robot_omni'), 'maps', 'hospital_map_final.yaml']
+    )
+```
+
+
+
