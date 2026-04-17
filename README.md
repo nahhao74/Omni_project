@@ -361,6 +361,7 @@ ros2 launch robot_omni slam.py
 ```
 ros2 run nav2_map_server map_saver_cli -f my_map
 ```
+![SLAM](image/scan_map.gif)
 
 ## Cấu hình các sever phục vụ cho Nav2 để tối ưu hóa quỹ đạo di chuyển và khả năng tránh vật cản động/tĩnh.
 
