@@ -80,69 +80,100 @@ Dự án này được phát triển dựa trên nền tảng của nhiều thư
     
     <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
 
-# Xử lý tín hiệu đầu vào từ cảm biến và Odometry
-Hệ thống robot xử lý dữ liệu theo nhiều bước, từ cảm biến → ROS2 → bộ lọc → đưa vào SLAM / Navigation.
+Xử lý tín hiệu đầu vào từ cảm biến và Odometry
 
-**ổng quan luồng xử lý**
+Hệ thống robot xử lý dữ liệu theo nhiều bước, từ cảm biến → ROS2 → bộ lọc → đưa vào SLAM và Navigation.
+
+Tổng quan luồng xử lý
 Cảm biến (Gazebo)
-   ↓
-Bridge (chuyển sang ROS2)
-   ↓
+      ↓
+Bridge (Gazebo → ROS2)
+      ↓
 Topic ROS2 (/scan, /imu, /odom)
-   ↓
+      ↓
 Bộ lọc EKF
-   ↓
+      ↓
 /odometry/filtered
-   ↓
+      ↓
 SLAM / Navigation
+1. Nhận dữ liệu từ cảm biến
 
-**1. Nhận dữ liệu từ cảm biến**
-Robot sử dụng nhiều loại cảm biến, mỗi cái có nhiệm vụ riêng:
+Robot sử dụng nhiều loại cảm biến, mỗi loại có vai trò riêng:
 
-**LiDAR**
+LiDAR
+
 Topic:
+
 /scan_front_raw
 /scan_rear_raw
 
-Dữ liệu trả về: khoảng cách từ robot tới vật cản theo từng góc
-Dùng để:
-    phát hiện vật cản
-    xây dựng bản đồ (SLAM)
-    tránh va chạm khi di chuyển
-**IMU**
-Topic: /base_imu
+Dữ liệu:
 
-Dữ liệu: góc quay (yaw), vận tốc góc, gia tốc
-Dùng để:
-    xác định hướng robot
-    giữ robot không bị lệch hướng
-    hỗ trợ bộ lọc EKF
-**Camera (RGB-D)**
+Khoảng cách từ robot đến vật cản theo từng góc quét
+
+Chức năng:
+
+Phát hiện vật cản xung quanh robot
+Cung cấp dữ liệu cho SLAM để xây dựng bản đồ
+Hỗ trợ tránh va chạm trong quá trình di chuyển
+IMU
+
 Topic:
+
+/base_imu
+
+Dữ liệu:
+
+Góc quay (yaw)
+Vận tốc góc
+Gia tốc
+
+Chức năng:
+
+Xác định hướng của robot
+Giữ ổn định góc quay khi robot di chuyển
+Cung cấp thông tin cho bộ lọc EKF
+Camera (RGB-D)
+
+Topic:
+
 /camera/depth_image
 /camera/points
 
-Dữ liệu: ảnh độ sâu (depth), pointcloud 3D
+Dữ liệu:
 
-Dùng để:
-    nhận diện vật thể
-    phát hiện vật cản 3D
-    hỗ trợ LiDAR (những chỗ LiDAR không thấy)
-    
-**Odometry**
-Topic: /mobile_base_controller/odometry
+Ảnh độ sâu
+PointCloud 3D
 
-Dữ liệu: vận tốc robot (tiến, ngang), vận tốc quay
+Chức năng:
 
-Dùng để: ước lượng chuyển động của robot theo thời gian
-**2. Chuyển dữ liệu từ Gazebo sang ROS2**
-Trong Gazebo, dữ liệu cảm biến không dùng trực tiếp được trong ROS2 → cần bridge.
+Nhận diện vật thể
+Phát hiện vật cản trong không gian 3D
+Bổ sung cho LiDAR ở các vùng bị hạn chế
+Odometry (bánh xe)
 
-Sử dụng:
+Topic:
+
+/mobile_base_controller/odometry
+
+Dữ liệu:
+
+Vận tốc tiến (Vx)
+Vận tốc ngang (Vy)
+Vận tốc quay
+
+Chức năng:
+
+Ước lượng chuyển động của robot theo thời gian
+2. Chuyển dữ liệu từ Gazebo sang ROS2
+
+Dữ liệu từ Gazebo cần được chuyển sang ROS2 thông qua bridge.
+
+Công cụ sử dụng:
 
 ros_gz_bridge parameter_bridge
 
-Được chạy trong launch :
+Cấu hình trong launch:
 
 bridge = Node(
     package='ros_gz_bridge',
@@ -150,31 +181,31 @@ bridge = Node(
     parameters=[{'config_file': bridge_config}, {'use_sim_time': True}],
 )
 
-Nhiệm vụ:
-    chuyển kiểu dữ liệu:
-    LaserScan
-    IMU
-    Image
-    
-đổi từ gz topic → ROS2 topic
-**3. Đồng bộ thời gian**
+Chức năng:
+
+Chuyển đổi kiểu dữ liệu giữa Gazebo và ROS2
+Chuyển các topic từ môi trường mô phỏng sang hệ ROS2
+3. Đồng bộ thời gian
+
+Cấu hình:
+
 use_sim_time: true
 
-Tất cả node dùng chung:
+Nguyên lý:
 
-thời gian từ /clock
+Tất cả các node sử dụng thời gian từ topic /clock
 
 Mục đích:
 
-tránh lệch thời gian giữa:
-LiDAR
-IMU
-Odometry
+Đồng bộ dữ liệu giữa các cảm biến
+Tránh sai lệch thời gian khi xử lý
+4. Lọc và kết hợp dữ liệu (EKF)
 
-**4. Lọc và kết hợp dữ liệu (EKF)**
-Node sử dụng: ekf_filter_node
+Node sử dụng:
 
-Được chạy trong launch :
+ekf_filter_node
+
+Cấu hình trong launch:
 
 ekf_node = Node(
     package='robot_localization',
@@ -182,74 +213,223 @@ ekf_node = Node(
     name='ekf_filter_node'
 )
 
-Nguyên lý hoạt động
+Nguyên lý hoạt động:
 
-EKF sẽ nhận dữ liệu từ: Odometry (vận tốc), IMU (góc quay)
+Nhận dữ liệu từ:
+Odometry (vận tốc)
+IMU (góc quay)
+Thực hiện:
+Lọc nhiễu
+Kết hợp dữ liệu từ nhiều nguồn
+Ước lượng trạng thái chính xác của robot
 
-Sau đó:
-    lọc nhiễu
-    kết hợp dữ liệu
-    tính toán trạng thái robot
-Output của EKF
-Topic: /odometry/filtered
+Output:
 
-=> Đây là dữ liệu quan trọng nhất để:
+/odometry/filtered
 
-SLAM
-Navigation
-hiển thị trên RViz
+Vai trò:
 
-**5. Đưa vào SLAM**
+Là dữ liệu đầu vào chính cho SLAM và Navigation
+Dùng để hiển thị trạng thái robot trong RViz
+5. Đưa vào SLAM
 
-Từ file **slam.lua** cấu hình :
+Cấu hình trong file slam.lua:
 
 use_odometry = true
 use_imu_data = true
 num_laser_scans = 2
 
-Nghĩa là SLAM dùng:
+Ý nghĩa:
 
+Sử dụng đồng thời:
 2 LiDAR
 IMU
-Odometry (đã qua EKF)
-✔ Mapping input
+Odometry đã qua EKF
 
-Từ slam.py :
+Mapping input (slam.py):
 
 ('/scan_1', '/scan_front_raw'),
 ('/scan_2', '/scan_rear_raw'),
 ('/imu', '/base_imu'),
 ('/odom', '/odometry/filtered')
 
-Tất cả dữ liệu được đưa vào SLAM để:
-xây map
-định vị robot
-**7 Đưa vào Navigation (Nav2)**
+Chức năng:
 
-Trong file launch :
+Xây dựng bản đồ môi trường
+Xác định vị trí robot trên bản đồ
+6. Đưa vào Navigation (Nav2)
 
-Nav2 sử dụng:
+Dữ liệu sử dụng:
 
 /odometry/filtered
 /scan
 /camera/points
-bản đồ
+Bản đồ
 
-Để:
-xác định vị trí robot
-tìm đường đi
-tránh vật cản
+Chức năng:
 
-**Tổng kết luồng xử lý**
+Xác định vị trí robot
+Lập kế hoạch đường đi
+Tránh vật cản
+Tổng kết luồng xử lý
 LiDAR, Camera → môi trường
-IMU → hướng
-Odom → vận tốc
-        ↓
-      EKF
-        ↓
+IMU           → hướng
+Odometry      → vận tốc
+                    ↓
+                  EKF
+                    ↓
+        /odometry/filtered
+                    ↓
+           SLAM / Navigation
+
+Nếu bạn cần, mình có thể format tiếp phần này thành:
+
+chuẩn báo cáo (có đánh số hình, bảng)
+hoặc viết kiểu ngắn gọn hơn để đưa vào slide
+
+Chỉ cần nói mục đích bạn dùng (báo cáo, thesis, README GitHub) mình chỉnh đúng format cho bạn.
+
+README GitHUB
+
+Ok, mình format lại chuẩn README GitHub (gọn, rõ, markdown đẹp, dễ đọc) cho bạn 👇
+
+Sensor Processing & Odometry Pipeline
+
+Hệ thống robot xử lý dữ liệu từ cảm biến theo pipeline:
+
+Gazebo Sensors
+      ↓
+ROS-GZ Bridge
+      ↓
+ROS2 Topics (/scan, /imu, /odom)
+      ↓
+EKF (robot_localization)
+      ↓
 /odometry/filtered
-        ↓
-SLAM / Nav2
+      ↓
+SLAM / Navigation (Nav2)
+1. Sensor Inputs
+LiDAR
+Topics:
+/scan_front_raw
+/scan_rear_raw
+Data:
+Khoảng cách đến vật cản theo từng góc
+Usage:
+Phát hiện vật cản
+Xây dựng bản đồ (SLAM)
+Tránh va chạm
+IMU
+Topic: /base_imu
+Data:
+Góc quay (yaw)
+Vận tốc góc
+Gia tốc
+Usage:
+Xác định hướng robot
+Giữ ổn định góc quay
+Hỗ trợ EKF
+RGB-D Camera
+Topics:
+/camera/depth_image
+/camera/points
+Data:
+Ảnh độ sâu
+PointCloud 3D
+Usage:
+Nhận diện vật thể
+Phát hiện vật cản 3D
+Bổ sung cho LiDAR
+Wheel Odometry
+Topic: /mobile_base_controller/odometry
+Data:
+Vận tốc tiến (Vx), ngang (Vy)
+Vận tốc quay
+Usage:
+Ước lượng chuyển động robot
+2. Gazebo → ROS2 Bridge
+
+Sử dụng ros_gz_bridge để chuyển dữ liệu:
+
+ros2 run ros_gz_bridge parameter_bridge
+Launch config
+bridge = Node(
+    package='ros_gz_bridge',
+    executable='parameter_bridge',
+    parameters=[{'config_file': bridge_config}, {'use_sim_time': True}],
+)
+Chức năng
+Chuyển đổi message:
+LaserScan
+Imu
+Image
+Chuyển topic từ Gazebo sang ROS2
+3. Time Synchronization
+use_sim_time: true
+Tất cả node dùng /clock
+Đảm bảo dữ liệu đồng bộ giữa các sensor
+4. Sensor Fusion (EKF)
+Node
+ekf_node = Node(
+    package='robot_localization',
+    executable='ekf_node',
+    name='ekf_filter_node'
+)
+Input
+Odometry (vận tốc)
+IMU (góc quay)
+Process
+Lọc nhiễu
+Kết hợp nhiều nguồn dữ liệu
+Ước lượng trạng thái robot
+Output
+/odometry/filtered
+Vai trò
+Dữ liệu chính cho:
+SLAM
+Navigation
+RViz
+5. SLAM Integration
+Config (slam.lua)
+use_odometry = true
+use_imu_data = true
+num_laser_scans = 2
+Input topics
+('/scan_1', '/scan_front_raw'),
+('/scan_2', '/scan_rear_raw'),
+('/imu', '/base_imu'),
+('/odom', '/odometry/filtered')
+Chức năng
+Xây dựng bản đồ
+Định vị robot
+6. Navigation (Nav2)
+Input
+/odometry/filtered
+/scan
+/camera/points
+Map
+Chức năng
+Xác định vị trí robot
+Lập kế hoạch đường đi
+Tránh vật cản
+Summary
+LiDAR + Camera → môi trường
+IMU            → hướng
+Odometry       → vận tốc
+                     ↓
+                   EKF
+                     ↓
+         /odometry/filtered
+                     ↓
+            SLAM / Nav2
+
+Nếu bạn muốn README xịn hơn nữa, mình có thể thêm:
+
+sơ đồ hình ảnh (block diagram)
+phần “How to run”
+phần “System architecture”
+
+Chỉ cần nói mình build full README là mình làm cho bạn luôn.
 
     
 
