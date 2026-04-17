@@ -77,283 +77,97 @@ Dự án này được phát triển dựa trên nền tảng của nhiều thư
 <img width="927" height="681" alt="image" src="https://github.com/user-attachments/assets/f4e3c76a-80d7-4ed1-9f35-0749ab168c47" />
 
 
-# Xử lý tín hiệu đầu vào từ cảm biến và Odometry
-    Để dùng được cảm biến trong Ros2 thì cần phải có plugin liên quan đến cảm biến, được khai báo trong file hospital_aws.world và hospital_full.wotld:  
-    
-    '<plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">'
-
-Hệ thống robot xử lý dữ liệu theo nhiều bước, từ cảm biến → ROS2 → bộ lọc → đưa vào SLAM và Navigation.
-
-Tổng quan luồng xử lý
-'''
-Cảm biến (Gazebo)
-      ↓
-Bridge (Gazebo → ROS2)
-      ↓
-Topic ROS2 (/scan, /imu, /odom)
-      ↓
-Bộ lọc EKF
-      ↓
-/odometry/filtered
-      ↓
-SLAM / Navigation  
-
-
-**1. Nhận dữ liệu từ cảm biến**
-
-Robot sử dụng nhiều loại cảm biến, mỗi loại có vai trò riêng:
-
-**LiDAR**
-
-Topic:
-
-/scan_front_raw  
-
-/scan_rear_raw  
-
-Dữ liệu: Khoảng cách từ robot đến vật cản theo từng góc quét
-
-Chức năng:  
-
-Phát hiện vật cản xung quanh robot
-Cung cấp dữ liệu cho SLAM để xây dựng bản đồ
-Hỗ trợ tránh va chạm trong quá trình di chuyển  
-
-**IMU**
-
-Topic:  
-
-/base_imu  
-
-Dữ liệu:  
-
-Góc quay (yaw)
-Vận tốc góc
-Gia tốc
-
-Chức năng:  
-
-Xác định hướng của robot
-Giữ ổn định góc quay khi robot di chuyển
-Cung cấp thông tin cho bộ lọc EKF
-Camera (RGB-D)
-
-Topic:
-
-/camera/depth_image
-/camera/points
-
-Dữ liệu:
-
-Ảnh độ sâu
-PointCloud 3D
-
-Chức năng:
-
-Nhận diện vật thể
-Phát hiện vật cản trong không gian 3D
-Bổ sung cho LiDAR ở các vùng bị hạn chế
-Odometry (bánh xe)
-
-Topic:
-
-/mobile_base_controller/odometry
-
-Dữ liệu:
-
-Vận tốc tiến (Vx)
-Vận tốc ngang (Vy)
-Vận tốc quay
-
-Chức năng:
-
-Ước lượng chuyển động của robot theo thời gian
-2. Chuyển dữ liệu từ Gazebo sang ROS2
-
-Dữ liệu từ Gazebo cần được chuyển sang ROS2 thông qua bridge.
-
-Công cụ sử dụng:
-
-ros_gz_bridge parameter_bridge
-
-Cấu hình trong launch:
-
-bridge = Node(
-    package='ros_gz_bridge',
-    executable='parameter_bridge',
-    parameters=[{'config_file': bridge_config}, {'use_sim_time': True}],
-)
-
-Chức năng:
-
-Chuyển đổi kiểu dữ liệu giữa Gazebo và ROS2
-Chuyển các topic từ môi trường mô phỏng sang hệ ROS2
-3. Đồng bộ thời gian
-
-Cấu hình:
-
-use_sim_time: true
-
-Nguyên lý:
-
-Tất cả các node sử dụng thời gian từ topic /clock
-
-Mục đích:
-
-Đồng bộ dữ liệu giữa các cảm biến
-Tránh sai lệch thời gian khi xử lý
-4. Lọc và kết hợp dữ liệu (EKF)
-
-Node sử dụng:
-
-ekf_filter_node
-
-Cấu hình trong launch:
-
-ekf_node = Node(
-    package='robot_localization',
-    executable='ekf_node',
-    name='ekf_filter_node'
-)
-
-Nguyên lý hoạt động:
-
-Nhận dữ liệu từ:
-Odometry (vận tốc)
-IMU (góc quay)
-Thực hiện:
-Lọc nhiễu
-Kết hợp dữ liệu từ nhiều nguồn
-Ước lượng trạng thái chính xác của robot
-
-Output:
-
-/odometry/filtered
-
-Vai trò:
-
-Là dữ liệu đầu vào chính cho SLAM và Navigation
-Dùng để hiển thị trạng thái robot trong RViz
-5. Đưa vào SLAM
-
-Cấu hình trong file slam.lua:
-
-use_odometry = true
-use_imu_data = true
-num_laser_scans = 2
-
-Ý nghĩa:
-
-Sử dụng đồng thời:
-2 LiDAR
-IMU
-Odometry đã qua EKF
-
-Mapping input (slam.py):
-
-('/scan_1', '/scan_front_raw'),
-('/scan_2', '/scan_rear_raw'),
-('/imu', '/base_imu'),
-('/odom', '/odometry/filtered')
-
-Chức năng:
-
-Xây dựng bản đồ môi trường
-Xác định vị trí robot trên bản đồ
-6. Đưa vào Navigation (Nav2)
-
-Dữ liệu sử dụng:
-
-/odometry/filtered
-/scan
-/camera/points
-Bản đồ
-
-Chức năng:
-
-Xác định vị trí robot
-Lập kế hoạch đường đi
-Tránh vật cản
-Tổng kết luồng xử lý
-LiDAR, Camera → môi trường
-IMU           → hướng
-Odometry      → vận tốc
-                    ↓
-                  EKF
-                    ↓
-        /odometry/filtered
-                    ↓
-           SLAM / Navigation
-
-Nếu bạn cần, mình có thể format tiếp phần này thành:
-
-chuẩn báo cáo (có đánh số hình, bảng)
-hoặc viết kiểu ngắn gọn hơn để đưa vào slide
-
-Chỉ cần nói mục đích bạn dùng (báo cáo, thesis, README GitHub) mình chỉnh đúng format cho bạn.
-
-README GitHUB
-
-Ok, mình format lại chuẩn README GitHub (gọn, rõ, markdown đẹp, dễ đọc) cho bạn 👇
-
-Sensor Processing & Odometry Pipeline
+# Sensor Processing & Odometry Pipeline
 
 Hệ thống robot xử lý dữ liệu từ cảm biến theo pipeline:
 
+
 Gazebo Sensors
-      ↓
+↓
 ROS-GZ Bridge
-      ↓
+↓
 ROS2 Topics (/scan, /imu, /odom)
-      ↓
+↓
 EKF (robot_localization)
-      ↓
+↓
 /odometry/filtered
-      ↓
+↓
 SLAM / Navigation (Nav2)
-1. Sensor Inputs
-LiDAR
-Topics:
-/scan_front_raw
-/scan_rear_raw
-Data:
-Khoảng cách đến vật cản theo từng góc
-Usage:
-Phát hiện vật cản
-Xây dựng bản đồ (SLAM)
-Tránh va chạm
-IMU
-Topic: /base_imu
-Data:
-Góc quay (yaw)
-Vận tốc góc
-Gia tốc
-Usage:
-Xác định hướng robot
-Giữ ổn định góc quay
-Hỗ trợ EKF
-RGB-D Camera
-Topics:
-/camera/depth_image
-/camera/points
-Data:
-Ảnh độ sâu
-PointCloud 3D
-Usage:
-Nhận diện vật thể
-Phát hiện vật cản 3D
-Bổ sung cho LiDAR
-Wheel Odometry
-Topic: /mobile_base_controller/odometry
-Data:
-Vận tốc tiến (Vx), ngang (Vy)
-Vận tốc quay
-Usage:
-Ước lượng chuyển động robot
-2. Gazebo → ROS2 Bridge
 
-Sử dụng ros_gz_bridge để chuyển dữ liệu:
 
+---
+
+## 1. Sensor Inputs
+
+### LiDAR
+
+**Topics:**
+- `/scan_front_raw`
+- `/scan_rear_raw`
+
+**Data:**
+- Khoảng cách đến vật cản theo từng góc
+
+**Usage:**
+- Phát hiện vật cản  
+- Xây dựng bản đồ (SLAM)  
+- Tránh va chạm  
+
+---
+
+### IMU
+
+**Topic:**
+- `/base_imu`
+
+**Data:**
+- Góc quay (yaw)  
+- Vận tốc góc  
+- Gia tốc  
+
+**Usage:**
+- Xác định hướng robot  
+- Giữ ổn định góc quay  
+- Hỗ trợ EKF  
+
+---
+
+### RGB-D Camera
+
+**Topics:**
+- `/camera/depth_image`
+- `/camera/points`
+
+**Data:**
+- Ảnh độ sâu  
+- PointCloud 3D  
+
+**Usage:**
+- Nhận diện vật thể  
+- Phát hiện vật cản 3D  
+- Bổ sung cho LiDAR  
+
+---
+
+### Wheel Odometry
+
+**Topic:**
+- `/mobile_base_controller/odometry`
+
+**Data:**
+- Vận tốc tiến (Vx), ngang (Vy)  
+- Vận tốc quay  
+
+**Usage:**
+- Ước lượng chuyển động robot  
+
+---
+
+## 2. Gazebo → ROS2 Bridge
+
+Sử dụng:
+
+```bash
 ros2 run ros_gz_bridge parameter_bridge
 Launch config
 bridge = Node(
@@ -369,7 +183,7 @@ Image
 Chuyển topic từ Gazebo sang ROS2
 3. Time Synchronization
 use_sim_time: true
-Tất cả node dùng /clock
+Tất cả node sử dụng /clock
 Đảm bảo dữ liệu đồng bộ giữa các sensor
 4. Sensor Fusion (EKF)
 Node
@@ -388,7 +202,9 @@ Kết hợp nhiều nguồn dữ liệu
 Output
 /odometry/filtered
 Vai trò
+
 Dữ liệu chính cho:
+
 SLAM
 Navigation
 RViz
