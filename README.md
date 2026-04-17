@@ -452,7 +452,9 @@ BT Navigator là bộ điều phối logic, cụ thể:
 - Load bản đồ từ file (.yaml + .pgm/.png)
 - Publish lên topic /map
 - Các thành phần khác (AMCL, Planner…) sẽ subscribe map này để sử dụng
+
 **Vai trò của Map Server trong Nav2**
+
 Map Server là nguồn dữ liệu môi trường, cụ thể:
 - Cung cấp bản đồ tĩnh cho robot
 - Là cơ sở để:
