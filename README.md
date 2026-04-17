@@ -17,7 +17,7 @@ Dự án này triển khai hệ thống điều hướng tự hành toàn diện
 2. Xử lý tín hiệu đầu vào từ cảm biến (LiDAR, IMU, Camera) và dữ liệu Odometry.
 3. Thiết lập hệ thống TF tree chuẩn xác.
 4. Xây dựng bản đồ trong môi trường phức tạp (SLAM & Mapping). Sử dụng các thuật toán SLAM hiện đại trên ROS 2 để quét và xây dựng bản đồ Occupancy Grid 2D từ môi trường AWS Hospital World, xử lý nhiễu từ các hành lang dài và các phòng bệnh có cấu trúc giống nhau.
-5. Tinh chỉnh các tham số cấu hình của Nav2 để tối ưu hóa quỹ đạo di chuyển và khả năng tránh vật cản động/tĩnh.
+5. Cấu hình các sever phục vụ cho Nav2 để tối ưu hóa quỹ đạo di chuyển và khả năng tránh vật cản động/tĩnh.
 
 ---
 
@@ -362,3 +362,29 @@ ros2 launch robot_omni slam.py
 ros2 run nav2_map_server map_saver_cli -f my_map
 ```
 
+## Cấu hình các sever phục vụ cho Nav2 để tối ưu hóa quỹ đạo di chuyển và khả năng tránh vật cản động/tĩnh.
+
+`File cấu hình : params.yaml`
+
+### AMCL
+
+AMCL (Adaptive Monte Carlo Localization) là một thuật toán định vị robot trong ROS/ROS2 (đặc biệt dùng trong Nav2). Nó sử dụng phương pháp lọc hạt (particle filter) để ước lượng vị trí và hướng của robot trên bản đồ có sẵn.
+
+Nguyên lý hoạt động (ngắn gọn)
+- Robot không biết chính xác mình đang ở đâu → AMCL tạo ra hàng trăm đến hàng nghìn “hạt” (particles) giả định vị trí.
+- Mỗi hạt được đánh giá dựa trên:
+- Dữ liệu odometry (chuyển động robot)
+- Dữ liệu LaserScan (so sánh với map)
+- Các hạt phù hợp sẽ được giữ lại, hạt sai bị loại bỏ.
+- Sau nhiều vòng lặp → các hạt hội tụ → cho ra pose chính xác của robot.
+
+**Vai trò của AMCL trong hệ Nav2**
+
+AMCL là thành phần cốt lõi để định vị, cụ thể:
+
+- Xác định vị trí robot trên bản đồ (map → base_link)
+- Cập nhật liên tục khi robot di chuyển
+- Cung cấp pose cho:
+ - Planner (lập kế hoạch đường đi)
+ - Controller (điều khiển robot)
+ - Publish TF: map → odom
