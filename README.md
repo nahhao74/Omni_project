@@ -517,7 +517,7 @@ Khi đã gần đúng hướng:
 Rotation Shim → xử lý định hướng ban đầu
 MPPI → xử lý chuyển động tối ưu
 
-# để hình
+![Controller](image/controller.gif)
 
 ---
 ## Global Costmap
