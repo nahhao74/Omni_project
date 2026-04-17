@@ -337,8 +337,25 @@ Vì vậy, việc thiết kế và kiểm tra TF tree (đúng frame, đúng pare
 # Để Hình TF tree ở đây
 
 ## Xây dựng bản đồ trong môi trường phức tạp (SLAM & Mapping)
+Trong hệ thống này, robot sử dụng các thuật toán SLAM (Simultaneous Localization and Mapping) để đồng thời xác định vị trí và xây dựng bản đồ môi trường dưới dạng Occupancy Grid 2D.
 
+Môi trường bệnh viện đặt ra nhiều thách thức:
+
+- Hành lang dài, ít đặc trưng → dễ gây sai lệch định vị
+- Các phòng có cấu trúc giống nhau → gây nhầm lẫn (perceptual aliasing)
+- Nhiễu từ cảm biến và sai số odometry
+
+Để cải thiện độ chính xác, hệ thống:
+
+- Kết hợp dữ liệu từ LiDAR + IMU + Odometry
+- Sử dụng EKF (Extended Kalman Filter) để hợp nhất dữ liệu (sensor fusion) và lọc nhiễu trạng thái robot
+- Áp dụng các thuật toán SLAM hiện đại trong ROS 2 nhằm giảm drift và giữ tính nhất quán của bản đồ
+
+Nhờ đó, robot có thể xây dựng bản đồ ổn định và chính xác, làm nền tảng cho các bước Localization và Navigation (Nav2) phía sau.
+### example
 ```
+cd ~/ros2_ws
+source install/setup.bash
 ros2 launch robot_omni slam.py
 ```
 
