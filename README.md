@@ -164,17 +164,11 @@ SLAM / Navigation (Nav2)
 ---
 
 ## 2. Gazebo → ROS2 Bridge
-
-Sử dụng:
-
-```bash
-ros2 run ros_gz_bridge parameter_bridge
-Launch config
 bridge = Node(
     package='ros_gz_bridge',
     executable='parameter_bridge',
     parameters=[{'config_file': bridge_config}, {'use_sim_time': True}],
-)```
+)
 Chức năng
 Chuyển đổi message:
 LaserScan
@@ -241,7 +235,3 @@ Odometry       → vận tốc
          /odometry/filtered
                      ↓
             SLAM / Nav2
-
-
-    
-
