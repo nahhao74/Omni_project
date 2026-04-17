@@ -511,6 +511,8 @@ Các nguồn này đều được cấu hình với cả hai chức năng:
 - marking = true → thêm vật cản vào costmap
 - clearing = true → xóa vật cản khi không còn thấy
 
+# để hình 
+
 ## Local Costmap
 
 Local Costmap là bản đồ chi phí cục bộ dùng cho Controller để điều khiển robot trong thời gian thực. Nó hoạt động trong frame odom và sử dụng rolling window, tức là luôn di chuyển theo robot và chỉ tập trung vào khu vực xung quanh gần. 
@@ -518,6 +520,25 @@ Local Costmap là bản đồ chi phí cục bộ dùng cho Controller để đi
 Local Costmap cũng sử dụng Voxel Layer để phát hiện vật cản từ cảm biến và Inflation Layer để tạo vùng an toàn, nhưng với bán kính nhỏ hơn để robot linh hoạt hơn khi di chuyển trong không gian hẹp. Nhờ đó, robot có thể né vật cản động, điều chỉnh hướng đi nhanh và bám theo đường đã được Planner tạo ra một cách mượt mà.
 
 Trong cấu hình của bạn, cả Global Costmap và Local Costmap đều sử dụng cùng một nhóm Observation Sources, tức là cùng lấy dữ liệu từ các cảm biến để cập nhật vật cản.
+
+Nguồn quan sát giống với Global costmap
+
+# để hình
+
+## Collision Monitor
+**Collision Monitor** trong Nav2 là một thành phần dùng để giám sát va chạm theo thời gian thực và can thiệp trực tiếp vào lệnh điều khiển robot.
+
+Trong cấu hình của project, Collision Monitor định nghĩa các hành động chính sau:
+- stop
+→ dừng robot ngay lập tức khi có vật cản nguy hiểm
+- slowdown
+→ giảm tốc độ khi vào vùng gần vật cản
+- limit
+→ giới hạn vận tốc tối đa (linear + angular)
+- approach
+→ điều chỉnh tốc độ dựa trên thời gian dự đoán va chạm
+- elocity_polygon stop
+→ dừng robot dựa trên trạng thái vận tốc và vùng kiểm tra tương ứng
 
 
 
