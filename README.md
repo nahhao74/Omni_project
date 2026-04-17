@@ -445,5 +445,53 @@ Map Server là nguồn dữ liệu môi trường, cụ thể:
     )
 ```
 
+## Planner Server 
+**Planner Server** trong Nav2 là thành phần dùng để tính toán đường đi (global path) từ vị trí hiện tại của robot đến mục tiêu trên bản đồ.
+Project đang sử dụng: `Smac Planner 2D` (một phiên bản cải tiến của A*):
+Nguyên lý hoạt động:
+- Bắt đầu từ vị trí robot (start)
+- Mở rộng dần các ô lân cận trên grid map
+- Với mỗi ô, tính cost:
+  - khoảng cách đến goal
+  - chi phí từ costmap (gần tường, vật cản sẽ cost cao)
+  - Luôn chọn hướng có cost thấp nhất
+Lặp cho đến khi:
+chạm goal → tạo path
+
+**Điểm khác so với A* thường**
+- Tính cost thông minh hơn (theo costmap, không chỉ khoảng cách)
+- Tự tránh vùng nguy hiểm (gần tường, vật cản)
+- Đường đi “đẹp” hơn, không zig-zag nhiều
+- Tối ưu để chạy nhanh trong ROS2
+
+# để hình.
+
+## Controller Server
+**Controller Server** trong Nav2 là thành phần dùng để biến đường đi (path) thành chuyển động thực tế của robot.
+Project đang dùng: `Rotation Shim Controller + MPPI Controller`
+
+Cách hệ điều khiển này hoạt động (rất quan trọng)
+1. Rotation Shim (lớp ngoài)
+Khi robot chưa hướng đúng theo path:
+- chỉ quay tại chỗ cho đúng với đường global path do planer sever lập ra.
+Khi đã gần đúng hướng:
+- chuyển sang MPPI
+2. MPPI (lớp chính)
+- Sinh hàng nghìn quỹ đạo (sampling)
+- Tính cost dựa trên:
+  - bám path
+  - tránh vật cản
+  - hướng tới goal
+- Chọn quỹ đạo tốt nhất
+- Xuất vận tốc điều khiển
+
+Ý nghĩa của việc kết hợp này
+Rotation Shim → xử lý định hướng ban đầu
+MPPI → xử lý chuyển động tối ưu
+
+# để hình
+
+
+
 
 
