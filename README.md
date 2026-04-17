@@ -613,7 +613,7 @@ Chạy file: `ros2_ws/src/robot_omni/launch/robot_gui_control.py` để có th�
 - Chạy manual
 - Chạy bằng thuật toán GA
 - Chạy tuần tự các phòng
-- chạy tới phòng chỉ định.
+- Chạy tới phòng chỉ định.
 
 
 ![Gui](image/gui.png)
