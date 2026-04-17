@@ -549,8 +549,6 @@ Local Costmap là bản đồ chi phí cục bộ dùng cho Controller để đi
 
 Local Costmap cũng sử dụng Voxel Layer để phát hiện vật cản từ cảm biến và Inflation Layer để tạo vùng an toàn, nhưng với bán kính nhỏ hơn để robot linh hoạt hơn khi di chuyển trong không gian hẹp. Nhờ đó, robot có thể né vật cản động, điều chỉnh hướng đi nhanh và bám theo đường đã được Planner tạo ra một cách mượt mà.
 
-Trong cấu hình của bạn, cả Global Costmap và Local Costmap đều sử dụng cùng một nhóm Observation Sources, tức là cùng lấy dữ liệu từ các cảm biến để cập nhật vật cản.
-
 Nguồn quan sát giống với Global costmap
 
 ![planer](image/localcostmap.png)
