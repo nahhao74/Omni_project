@@ -592,6 +592,8 @@ source install/setup.bash
 ros2 launch robot_omni localization_launch.py
 ```
 
+![demo](image/demo.gif)
+
 Khởi chạy thuật toán GA để tìm khoảng cách đến các phòng theo đường đi ngắn và tối ưu nhất. Chạy file `ros2_ws/src/robot_omni/launch/robot_patrol.py`
 **Cần phải có file :** `ros2_ws/src/robot_omni/launch/ga_path_optimizer.py` nằm trong cùng thư mục.
 
