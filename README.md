@@ -57,10 +57,10 @@ ros2 launch robot_omni localization_launch.py
 # Acknowledgments
 
 Dự án này được phát triển dựa trên nền tảng của nhiều thư viện mã nguồn mở và tài liệu tham khảo từ cộng đồng ROS. Xin gửi lời cảm ơn đặc biệt đến:
-
     Cartographer ROS / TurtleBot3: Các file cấu hình Launch và SLAM (như cartographer_node) được xây dựng dựa trên mã nguồn gốc của tác giả Darby Lim (Bản quyền 2019 thuộc Open Source Robotics Foundation, Inc. - Giấy phép Apache 2.0). Cấu trúc gốc đã được tùy biến lại (remapping) để có thể hợp nhất dữ liệu từ hệ thống Lidar kép và Odometry cho robot di chuyển đa hướng.
-    Nav2 & MPPI: https://docs.nav2.org/configuration/packages/configuring-mppic.html
-    AWS Hospital World: https://github.com/aws-robotics/aws-robomaker-hospital-world.git
+    
+Nav2 & MPPI: https://docs.nav2.org/configuration/packages/configuring-mppic.html
+AWS Hospital World: https://github.com/aws-robotics/aws-robomaker-hospital-world.git
 
 # Xây dưng mô hình robot
 1. Hình dạng kích thước .
