@@ -96,6 +96,8 @@ Dự án này được phát triển dựa trên nền tảng của nhiều thư
 - Plugin:
   - gz_ros2_control::GazeboSimSystem
   - gz-sim-imu-system
+ 
+# ĐỂ HÌNH ROBOT Ở ĐÂY
 
 
 # Sensor Processing & Odometry Pipeline
