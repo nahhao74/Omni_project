@@ -338,5 +338,5 @@ Vì vậy, việc thiết kế và kiểm tra TF tree (đúng frame, đúng pare
 
 ## Xây dựng bản đồ trong môi trường phức tạp (SLAM & Mapping)
 
-`ros2 launch robot_omni slam.py`
+```ros2 launch robot_omni slam.py```
 
