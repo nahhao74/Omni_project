@@ -75,12 +75,12 @@ Dự án này được phát triển dựa trên nền tảng của nhiều thư
 3. Tương thích Hệ thống
     ROS 2 & Gazebo: File này được viết để chạy trơn tru trên các phiên bản ROS 2 mới (có tham chiếu đến đường dẫn của bản Jazzy) và sử dụng các plugin hiện đại của Gazebo mới (Ignition/gz-sim) như **gz_ros2_control::GazeboSimSystem** hay **gz-sim-imu-system**.
 <img width="927" height="681" alt="image" src="https://github.com/user-attachments/assets/f4e3c76a-80d7-4ed1-9f35-0749ab168c47" />
-# Xử lý tín hiệu cảm biến
+
+
+# Xử lý tín hiệu đầu vào từ cảm biến và Odometry
     Để dùng được cảm biến trong Ros2 thì cần phải có plugin liên quan đến cảm biến, được khai báo trong file hospital_aws.world và hospital_full.wotld :
     
     <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
-
-Xử lý tín hiệu đầu vào từ cảm biến và Odometry
 
 Hệ thống robot xử lý dữ liệu theo nhiều bước, từ cảm biến → ROS2 → bộ lọc → đưa vào SLAM và Navigation.
 
@@ -423,13 +423,6 @@ Odometry       → vận tốc
                      ↓
             SLAM / Nav2
 
-Nếu bạn muốn README xịn hơn nữa, mình có thể thêm:
-
-sơ đồ hình ảnh (block diagram)
-phần “How to run”
-phần “System architecture”
-
-Chỉ cần nói mình build full README là mình làm cho bạn luôn.
 
     
 
