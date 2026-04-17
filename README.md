@@ -85,6 +85,7 @@ Dự án này được phát triển dựa trên nền tảng của nhiều thư
 Hệ thống robot xử lý dữ liệu theo nhiều bước, từ cảm biến → ROS2 → bộ lọc → đưa vào SLAM và Navigation.
 
 Tổng quan luồng xử lý
+'''
 Cảm biến (Gazebo)
       ↓
 Bridge (Gazebo → ROS2)
@@ -95,7 +96,9 @@ Bộ lọc EKF
       ↓
 /odometry/filtered
       ↓
-SLAM / Navigation
+SLAM / Navigation  
+
+
 **1. Nhận dữ liệu từ cảm biến**
 
 Robot sử dụng nhiều loại cảm biến, mỗi loại có vai trò riêng:
