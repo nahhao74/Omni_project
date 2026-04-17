@@ -385,6 +385,6 @@ AMCL là thành phần cốt lõi để định vị, cụ thể:
 - Xác định vị trí robot trên bản đồ (map → base_link)
 - Cập nhật liên tục khi robot di chuyển
 - Cung cấp pose cho:
- - Planner (lập kế hoạch đường đi)
- - Controller (điều khiển robot)
- - Publish TF: map → odom
+  - Planner (lập kế hoạch đường đi)
+  - Controller (điều khiển robot)
+  - Publish TF: map → odom
