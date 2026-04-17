@@ -388,3 +388,36 @@ AMCL là thành phần cốt lõi để định vị, cụ thể:
   - Planner (lập kế hoạch đường đi)
   - Controller (điều khiển robot)
   - Publish TF: map → odom
+
+### BT Navigator
+
+BT Navigator (Behavior Tree Navigator) là thành phần trong Nav2 dùng Behavior Tree để điều phối toàn bộ quá trình điều hướng của robot. Nó không trực tiếp lập đường hay điều khiển robot, mà đóng vai trò: Quyết định robot nên làm gì, làm theo thứ tự nào để tới mục tiêu
+
+Nguyên lý hoạt động: 
+- Robot nhận goal → BT Navigator kích hoạt Behavior Tree
+- Cây hành vi sẽ chạy theo từng bước:
+- Gọi Planner để tạo đường
+- Gọi Controller để đi theo đường
+- Trong quá trình chạy:
+  - Nếu đi lệch → replan
+  - Nếu thất bại → recovery
+- Quá trình này lặp liên tục cho đến khi: tới đích hoặc fail hoàn toàn
+
+**Vai trò của BT Navigator trong hệ Nav2**  
+
+BT Navigator là bộ điều phối logic, cụ thể:
+
+- Nhận goal từ user (NavigateToPose, NavigateThroughPoses)
+- Quyết định luồng xử lý:
+- khi nào lập đường
+- khi nào điều khiển
+- khi nào lập lại đường
+- khi nào xử lý lỗi
+- Điều phối các server:
+  - Planner
+  - Controller
+  - Recovery
+- Xử lý các tình huống:
+  - không tìm được path
+  - robot bị kẹt
+  - vật cản xuất hiện
