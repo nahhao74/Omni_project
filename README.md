@@ -106,12 +106,15 @@ cd ros2_ws
 source install/setup.bash
 ros2 launch robot_omni gazebo_control.launch.py
 ```
+
 Kiểm tra Ros2 controller
 
 ```
 Ros2 control list_controllers
 ```
-
+Nếu thấy tất cả để activate thì là đúng: 
+- joint_state_broadcaster
+- mobile_base_controller
 # Xử lý tín hiệu đầu vào từ cảm biến và dữ liệu Odometry.
 
 Hệ thống robot xử lý dữ liệu từ cảm biến theo pipeline:
