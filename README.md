@@ -100,7 +100,7 @@ Dự án này được phát triển dựa trên nền tảng của nhiều thư
 # ĐỂ HÌNH ROBOT Ở ĐÂY
 
 
-# Sensor Processing & Odometry Pipeline
+# S Xử lý tín hiệu đầu vào từ cảm biến và dữ liệu Odometry.
 
 Hệ thống robot xử lý dữ liệu từ cảm biến theo pipeline:
 
@@ -317,3 +317,19 @@ Odometry       → vận tốc
                      ↓
             SLAM / Nav2
 ```
+
+## Thiết lập hệ thống TF tree chuẩn xác.
+Trong ROS 2, TF tree đóng vai trò là hệ quy chiếu để liên kết tất cả các frame (base_link, odom, map, sensor frames,...) của robot lại với nhau. Việc thiết lập TF tree chuẩn và nhất quán là cực kỳ quan trọng vì:
+
+- Đảm bảo các dữ liệu cảm biến (LiDAR, IMU, Camera) được biểu diễn đúng vị trí và hướng trong không gian
+- Giúp các module như SLAM, Localization và Nav2 hiểu đúng vị trí thực của robot
+- Tránh lỗi sai lệch tọa độ (drift, nhảy frame, lệch map) khi robot di chuyển
+- Là nền tảng để các thuật toán lập kế hoạch và điều khiển hoạt động chính xác
+
+Một TF tree sai hoặc thiếu sẽ dẫn đến các lỗi nghiêm trọng như:
+
+- Robot định vị sai vị trí
+- Costmap hiển thị lệch vật cản
+- Planner tạo quỹ đạo sai
+
+Vì vậy, việc thiết kế và kiểm tra TF tree (đúng frame, đúng parent-child, đúng timestamp) là bước bắt buộc trong hệ thống robot tự hành.
