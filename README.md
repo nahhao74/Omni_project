@@ -334,7 +334,7 @@ Một TF tree sai hoặc thiếu sẽ dẫn đến các lỗi nghiêm trọng nh
 
 Vì vậy, việc thiết kế và kiểm tra TF tree (đúng frame, đúng parent-child, đúng timestamp) là bước bắt buộc trong hệ thống robot tự hành.
 
-# Để Hình TF tree ở đây
+![TF Tree](image/frames.png)
 
 ## Xây dựng bản đồ trong môi trường phức tạp (SLAM & Mapping)
 Trong hệ thống này, robot sử dụng các thuật toán SLAM (Simultaneous Localization and Mapping) để đồng thời xác định vị trí và xây dựng bản đồ môi trường dưới dạng Occupancy Grid 2D.
