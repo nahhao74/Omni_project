@@ -462,6 +462,8 @@ Map Server là nguồn dữ liệu môi trường, cụ thể:
     )
 ```
 
+![Robot](hospital_map_final.png)
+
 ## Planner Server 
 **Planner Server** trong Nav2 là thành phần dùng để tính toán đường đi (global path) từ vị trí hiện tại của robot đến mục tiêu trên bản đồ.
 Project đang sử dụng: `Smac Planner 2D` (một phiên bản cải tiến của A*):
