@@ -491,6 +491,36 @@ MPPI → xử lý chuyển động tối ưu
 
 # để hình
 
+## Global Costmap
+
+Global Costmap là bản đồ chi phí toàn cục trong Nav2, dùng để biểu diễn toàn bộ môi trường dưới dạng lưới cost nhằm phục vụ cho việc lập kế hoạch đường đi. Nó hoạt động trong frame map, không di chuyển theo robot, nên luôn giữ một cái nhìn ổn định và đầy đủ về không gian.  
+
+Global Costmap kết hợp các lớp như: Static Layer (bản đồ tĩnh), Voxel Layer (biểu diễn vật cản 3D theo chiều cao) và Inflation Layer (mở rộng vùng nguy hiểm quanh vật cản). Nhờ đó, Planner có thể tính toán đường đi an toàn, tránh vật cản và ưu tiên các vùng thông thoáng, thường là đi giữa hành lang thay vì sát tường.
+
+**Costmap này sử dụng 3 nguồn quan sát chính chính:**
+
+- LaserScan phía trước (/scan_front_raw)
+→ là nguồn chính để phát hiện vật cản phía trước robot, có độ chính xác cao, dùng để đánh dấu (marking) và xóa (clearing) vật cản trong costmap
+- LaserScan phía sau (/scan_rear_raw)
+→ bổ sung vùng phía sau, giúp robot an toàn khi lùi hoặc quay đầu, tránh bị “mù phía sau”
+- PointCloud từ camera (/camera/points)
+→ cung cấp dữ liệu 3D, giúp phát hiện các vật thể có chiều cao như bàn, ghế, người
+→ có thêm điều kiện lọc theo chiều cao để loại bỏ nhiễu (ví dụ sàn nhà hoặc vật quá thấp)
+
+Các nguồn này đều được cấu hình với cả hai chức năng:
+- marking = true → thêm vật cản vào costmap
+- clearing = true → xóa vật cản khi không còn thấy
+
+## Local Costmap
+
+Local Costmap là bản đồ chi phí cục bộ dùng cho Controller để điều khiển robot trong thời gian thực. Nó hoạt động trong frame odom và sử dụng rolling window, tức là luôn di chuyển theo robot và chỉ tập trung vào khu vực xung quanh gần. 
+
+Local Costmap cũng sử dụng Voxel Layer để phát hiện vật cản từ cảm biến và Inflation Layer để tạo vùng an toàn, nhưng với bán kính nhỏ hơn để robot linh hoạt hơn khi di chuyển trong không gian hẹp. Nhờ đó, robot có thể né vật cản động, điều chỉnh hướng đi nhanh và bám theo đường đã được Planner tạo ra một cách mượt mà.
+
+Trong cấu hình của bạn, cả Global Costmap và Local Costmap đều sử dụng cùng một nhóm Observation Sources, tức là cùng lấy dữ liệu từ các cảm biến để cập nhật vật cản.
+
+
+
 
 
 
