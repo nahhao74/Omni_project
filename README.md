@@ -80,7 +80,7 @@ Dự án này được phát triển dựa trên nền tảng của nhiều thư
 # Xử lý tín hiệu đầu vào từ cảm biến và Odometry
     Để dùng được cảm biến trong Ros2 thì cần phải có plugin liên quan đến cảm biến, được khai báo trong file hospital_aws.world và hospital_full.wotld :
     
-    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+    '<plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">'
 
 Hệ thống robot xử lý dữ liệu theo nhiều bước, từ cảm biến → ROS2 → bộ lọc → đưa vào SLAM và Navigation.
 
