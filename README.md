@@ -81,19 +81,19 @@ Dự án này được phát triển dựa trên nền tảng của nhiều thư
 
 Hệ thống robot xử lý dữ liệu từ cảm biến theo pipeline:
 
-
+```
 Gazebo Sensors
-↓
+      ↓
 ROS-GZ Bridge
-↓
+      ↓
 ROS2 Topics (/scan, /imu, /odom)
-↓
+      ↓
 EKF (robot_localization)
-↓
+      ↓
 /odometry/filtered
-↓
+      ↓
 SLAM / Navigation (Nav2)
-
+```
 
 ---
 
@@ -164,68 +164,126 @@ SLAM / Navigation (Nav2)
 ---
 
 ## 2. Gazebo → ROS2 Bridge
+
+Sử dụng:
+
+```bash
+ros2 run ros_gz_bridge parameter_bridge
+```
+
+### Launch config
+
+```python
 bridge = Node(
     package='ros_gz_bridge',
     executable='parameter_bridge',
     parameters=[{'config_file': bridge_config}, {'use_sim_time': True}],
 )
-Chức năng
-Chuyển đổi message:
-LaserScan
-Imu
-Image
-Chuyển topic từ Gazebo sang ROS2
-3. Time Synchronization
+```
+
+### Chức năng
+
+- Chuyển đổi message:
+  - LaserScan
+  - Imu
+  - Image
+- Chuyển topic từ Gazebo sang ROS2
+
+---
+
+## 3. Time Synchronization
+
+```yaml
 use_sim_time: true
-Tất cả node sử dụng /clock
-Đảm bảo dữ liệu đồng bộ giữa các sensor
-4. Sensor Fusion (EKF)
-Node
+```
+
+- Tất cả node sử dụng `/clock`
+- Đảm bảo dữ liệu đồng bộ giữa các sensor
+
+---
+
+## 4. Sensor Fusion (EKF)
+
+### Node
+
+```python
 ekf_node = Node(
     package='robot_localization',
     executable='ekf_node',
     name='ekf_filter_node'
 )
-Input
-Odometry (vận tốc)
-IMU (góc quay)
-Process
-Lọc nhiễu
-Kết hợp nhiều nguồn dữ liệu
-Ước lượng trạng thái robot
-Output
-/odometry/filtered
-Vai trò
+```
+
+### Input
+
+- Odometry (vận tốc)  
+- IMU (góc quay)  
+
+### Process
+
+- Lọc nhiễu  
+- Kết hợp nhiều nguồn dữ liệu  
+- Ước lượng trạng thái robot  
+
+### Output
+
+- `/odometry/filtered`
+
+### Vai trò
 
 Dữ liệu chính cho:
+- SLAM  
+- Navigation  
+- RViz  
 
-SLAM
-Navigation
-RViz
-5. SLAM Integration
-Config (slam.lua)
+---
+
+## 5. SLAM Integration
+
+### Config (`slam.lua`)
+
+```lua
 use_odometry = true
 use_imu_data = true
 num_laser_scans = 2
-Input topics
+```
+
+### Input topics
+
+```python
 ('/scan_1', '/scan_front_raw'),
 ('/scan_2', '/scan_rear_raw'),
 ('/imu', '/base_imu'),
 ('/odom', '/odometry/filtered')
-Chức năng
-Xây dựng bản đồ
-Định vị robot
-6. Navigation (Nav2)
-Input
-/odometry/filtered
-/scan
-/camera/points
-Map
-Chức năng
-Xác định vị trí robot
-Lập kế hoạch đường đi
-Tránh vật cản
-Summary
+```
+
+### Chức năng
+
+- Xây dựng bản đồ  
+- Định vị robot  
+
+---
+
+## 6. Navigation (Nav2)
+
+### Input
+
+- `/odometry/filtered`
+- `/scan`
+- `/camera/points`
+- Map
+
+### Chức năng
+
+- Xác định vị trí robot  
+- Lập kế hoạch đường đi  
+- Tránh vật cản  
+
+---
+
+## Summary
+
+```
 LiDAR + Camera → môi trường
 IMU            → hướng
 Odometry       → vận tốc
@@ -235,3 +293,4 @@ Odometry       → vận tốc
          /odometry/filtered
                      ↓
             SLAM / Nav2
+```
