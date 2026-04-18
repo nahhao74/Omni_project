@@ -37,7 +37,7 @@ RAW_ROOMS = [
     {"name": "room3", "x": 7.71, "y": 3.44},
     {"name": "room4", "x": -7.52, "y": 3.53},
     {"name": "room5", "x": 11.14, "y": 0.10},
-    {"name": "room6", "x": -10.60, "y": -0.89},
+    {"name": "room6", "x": -10.60, "y": -0.59},
     {"name": "room7", "x": 10.76, "y": -5.08},
     {"name": "room8", "x": -9.97, "y": -4.63},
     {"name": "room9", "x": 1.37, "y": -13.00},
@@ -102,6 +102,8 @@ class RobotGUI:
         self.navigator = None
         self.auto_nav_thread = None
         self.stop_auto_flag = False
+        
+        self.run_start_time = 0.0
 
         self.setup_ui()
         self.bind_keys()
@@ -148,10 +150,11 @@ class RobotGUI:
         btn_list_frame = ttk.Frame(control_frame)
         btn_list_frame.pack(fill=tk.X)
         
-        # Thêm sự kiện xóa đường Line khi bấm nút "Xóa List"
-        ttk.Button(btn_list_frame, text="🗑️ Xóa List", command=self.clear_list).pack(side=tk.LEFT, expand=True, fill=tk.X, padx=2)
+        ttk.Button(btn_list_frame, text="🗑️ Xóa Chọn", command=self.remove_selected).pack(side=tk.LEFT, expand=True, fill=tk.X, padx=1)
+        ttk.Button(btn_list_frame, text="🧹 Xóa Hết", command=self.clear_list).pack(side=tk.LEFT, expand=True, fill=tk.X, padx=1)
+        
         self.btn_run_custom = ttk.Button(btn_list_frame, text="▶️ CHẠY THỨ TỰ", command=lambda: self.start_auto("CUSTOM"))
-        self.btn_run_custom.pack(side=tk.RIGHT, expand=True, fill=tk.X, padx=2)
+        self.btn_run_custom.pack(side=tk.RIGHT, expand=True, fill=tk.X, padx=1)
 
         ttk.Label(control_frame, text="TỐI ƯU HÓA AI:", font=("Arial", 10, "bold"), foreground="purple").pack(anchor=tk.W, pady=(15,0))
         self.btn_ga = ttk.Button(control_frame, text="🧠 Chạy GA Tối ưu List", command=lambda: self.start_auto("GA"))
@@ -176,8 +179,21 @@ class RobotGUI:
 
     def clear_list(self):
         self.queue_listbox.delete(0, tk.END)
-        self.draw_map() # Xóa list thì xóa luôn đường Line trên bản đồ
-        self.log_msg("🗑️ Đã làm sạch lộ trình.")
+        self.draw_map() 
+        self.log_msg("🧹 Đã xóa toàn bộ lộ trình.")
+
+    def remove_selected(self):
+        selected_indices = self.queue_listbox.curselection()
+        if not selected_indices:
+            messagebox.showinfo("Hướng dẫn", "Vui lòng click bôi xanh một trạm trong danh sách bên trên để xóa!")
+            return
+        
+        for index in reversed(selected_indices):
+            room_name = self.queue_listbox.get(index)
+            self.queue_listbox.delete(index)
+            self.log_msg(f"✂️ Đã xóa trạm: {room_name}")
+            
+        self.draw_map() 
 
     def log_msg(self, msg):
         self.log_box.insert(tk.END, msg + "\n")
@@ -226,27 +242,18 @@ class RobotGUI:
 
     def on_key_press(self, event):
         if self.mode_var.get() != "MANUAL": return
-        
         key = event.keysym.lower() if event.keysym else event.char.lower()
-        
-        if key == 'q': 
-            self.speed_lin *= 1.1; self.log_msg(f"[Speed] Tiến: {self.speed_lin:.2f}")
-        elif key == 'z': 
-            self.speed_lin *= 0.9; self.log_msg(f"[Speed] Tiến: {self.speed_lin:.2f}")
-        elif key == 'w': 
-            self.speed_ang *= 1.1; self.log_msg(f"[Speed] Xoay: {self.speed_ang:.2f}")
-        elif key == 'x': 
-            self.speed_ang *= 0.9; self.log_msg(f"[Speed] Xoay: {self.speed_ang:.2f}")
-            
-        if key in ['i', 'comma', 'j', 'l', 'u', 'o', 'k']:
-            self.keys_pressed.add(key)
+        if key == 'q': self.speed_lin *= 1.1
+        elif key == 'z': self.speed_lin *= 0.9
+        elif key == 'w': self.speed_ang *= 1.1
+        elif key == 'x': self.speed_ang *= 0.9
+        if key in ['i', 'comma', 'j', 'l', 'u', 'o', 'k']: self.keys_pressed.add(key)
         self.update_twist_from_keys()
 
     def on_key_release(self, event):
         if self.mode_var.get() != "MANUAL": return
         key = event.keysym.lower() if event.keysym else event.char.lower()
-        if key in self.keys_pressed:
-            self.keys_pressed.remove(key)
+        if key in self.keys_pressed: self.keys_pressed.remove(key)
         self.update_twist_from_keys()
 
     def update_twist_from_keys(self):
@@ -280,6 +287,95 @@ class RobotGUI:
             self.robot_text.set_position((x + 0.5, y + 0.5))
             self.canvas.draw_idle()
 
+    # =======================================================================
+    # BỘ NÃO BFS: QUÉT BẢN ĐỒ BẰNG HÌNH ẢNH ĐỂ NÉ TƯỜNG (SIÊU TỐC)
+    # =======================================================================
+    def process_ga_and_navigate(self, selected_rooms, original_indices):
+        n = len(selected_rooms)
+        self.log_msg(f"🕵️ Đang quét {n} trạm. Quá trình đọc ảnh PGM để né tường diễn ra cực nhanh...")
+
+        try:
+            # 1. Đọc và xử lý ảnh Map PGM
+            img = mpimg.imread(MAP_IMAGE_PATH)
+            if len(img.shape) > 2: img = img[:,:,0]
+            img = np.flipud(img) 
+            grid = (img > 200).astype(int) # 1: Đường đi, 0: Tường
+            H, W = grid.shape
+
+            def get_px(x, y):
+                px = int((x - MAP_ORIGIN[0]) / MAP_RESOLUTION)
+                py = int((y - MAP_ORIGIN[1]) / MAP_RESOLUTION)
+                return max(0, min(W-1, px)), max(0, min(H-1, py))
+
+            from collections import deque
+            matrix = [[0.0]*n for _ in range(n)]
+
+            # 2. Chạy thuật toán loang BFS cho từng phòng
+            for i in range(n):
+                if self.stop_auto_flag: return
+                sx, sy = get_px(selected_rooms[i]["x"], selected_rooms[i]["y"])
+
+                # Ép điểm xuất phát vào vùng trống nếu user click sát vách tường
+                if grid[sy, sx] == 0:
+                    for r in range(1, 10):
+                        found = False
+                        for dx in range(-r, r+1):
+                            for dy in range(-r, r+1):
+                                nx, ny = sx + dx, sy + dy
+                                if 0 <= nx < W and 0 <= ny < H and grid[ny, nx] == 1:
+                                    sx, sy = nx, ny
+                                    found = True; break
+                            if found: break
+                        if found: break
+
+                visited = np.zeros((H, W), dtype=bool)
+                queue = deque([(sx, sy, 0.0)])
+                visited[sy, sx] = True
+
+                targets = {j: get_px(selected_rooms[j]["x"], selected_rooms[j]["y"]) for j in range(n) if i != j}
+                found_dists = {}
+
+                while queue and targets:
+                    cx, cy, dist = queue.popleft()
+
+                    to_remove = []
+                    for j, (tx, ty) in targets.items():
+                        if abs(cx - tx) <= 2 and abs(cy - ty) <= 2: 
+                            found_dists[j] = dist * MAP_RESOLUTION
+                            to_remove.append(j)
+                    for j in to_remove:
+                        del targets[j]
+
+                    for dx, dy in [(0,1), (1,0), (0,-1), (-1,0), (1,1), (-1,1), (1,-1), (-1,-1)]:
+                        nx, ny = cx + dx, cy + dy
+                        if 0 <= nx < W and 0 <= ny < H:
+                            if not visited[ny, nx] and grid[ny, nx] == 1:
+                                visited[ny, nx] = True
+                                cost = 1.414 if dx != 0 and dy != 0 else 1.0
+                                queue.append((nx, ny, dist + cost))
+
+                for j in range(n):
+                    if i == j:
+                        matrix[i][j] = 0.0
+                    else:
+                        matrix[i][j] = found_dists.get(j, 9999.0) # Phạt nặng nếu tắc đường
+
+        except Exception as e:
+            self.log_msg(f"⚠️ Lỗi đọc PGM: {e}. Dùng Pytago dự phòng.")
+            matrix = [[math.hypot(r1["x"]-r2["x"], r1["y"]-r2["y"]) for r2 in selected_rooms] for r1 in selected_rooms]
+
+        self.log_msg("🧠 Đã xây xong Ma trận khoảng cách xuyên tường. Tối ưu GA...")
+        
+        try:
+            optimized_sub_indices = optimize_route(matrix)
+            route_indices = [original_indices[idx] for idx in optimized_sub_indices]
+        except Exception as e:
+            self.log_msg(f"⚠️ Lỗi GA: {e}")
+            return
+
+        self.root.after(0, lambda: self.draw_map(route_indices))
+        self.run_navigation(route_indices)
+
     def start_auto(self, strategy):
         if not self.navigator:
             messagebox.showwarning("Chờ chút", "Nav2 chưa sẵn sàng!")
@@ -290,9 +386,12 @@ class RobotGUI:
             messagebox.showwarning("Trống", "Bạn chưa click chọn phòng nào trên bản đồ!")
             return
 
+        if strategy == "GA" and len(custom_names) < 2:
+            messagebox.showwarning("Chưa đủ trạm", "Vui lòng chọn ít nhất 2 phòng!")
+            return
+
         self.stop_auto_flag = False
-        
-        # Luôn luôn bắt đầu từ vị trí hiện tại của xe
+        self.run_start_time = time.time()
         self.update_robot_pose()
         
         selected_rooms = [RAW_ROOMS[0]] 
@@ -307,64 +406,62 @@ class RobotGUI:
 
         if strategy == "CUSTOM":
             route_indices = original_indices 
+            self.draw_map(route_indices)
+            self.auto_nav_thread = threading.Thread(target=self.run_navigation, args=(route_indices,))
+            self.auto_nav_thread.start()
+            
         elif strategy == "GA":
-            n = len(selected_rooms)
-            matrix = [[0.0]*n for _ in range(n)]
-            for i in range(n):
-                for j in range(n):
-                    if i != j:
-                        matrix[i][j] = math.hypot(selected_rooms[j]["x"] - selected_rooms[i]["x"], 
-                                                  selected_rooms[j]["y"] - selected_rooms[i]["y"])
-                                                  
-            self.log_msg(f"🧠 Tính toán GA cho {n-1} trạm...")
-            optimized_sub_indices = optimize_route(matrix)
-            route_indices = [original_indices[idx] for idx in optimized_sub_indices]
-
-        # 🔥 GỌI HÀM VẼ PATH NGAY SAU KHI TÍNH TOÁN XONG
-        self.draw_map(route_indices)
-
-        self.auto_nav_thread = threading.Thread(target=self.run_navigation, args=(route_indices,))
-        self.auto_nav_thread.start()
+            self.auto_nav_thread = threading.Thread(target=self.process_ga_and_navigate, args=(selected_rooms, original_indices))
+            self.auto_nav_thread.start()
 
     def run_navigation(self, route_indices):
         final_route = route_indices[1:] 
         route_names = [RAW_ROOMS[i]["name"] for i in final_route]
         self.log_msg(f"🚀 XUẤT PHÁT: {' -> '.join(route_names)}")
 
-        for i, idx in enumerate(final_route):
-            if self.stop_auto_flag:
-                self.log_msg("🛑 Đã hủy hành trình!")
-                self.navigator.cancelTask()
-                break
-
-            target_room = RAW_ROOMS[idx]
-            self.log_msg(f"---> Trạm {i+1}: Tiến về {target_room['name']}")
-            
-            pose = PoseStamped()
-            pose.header.frame_id = 'map'
-            pose.header.stamp = self.node.get_clock().now().to_msg()
-            pose.pose.position.x = float(target_room["x"])
-            pose.pose.position.y = float(target_room["y"])
-            pose.pose.orientation.w = 1.0 
-
-            self.navigator.goToPose(pose)
-
-            while not self.navigator.isTaskComplete():
+        try:
+            for i, idx in enumerate(final_route):
                 if self.stop_auto_flag:
+                    self.log_msg("🛑 Đã hủy hành trình!")
                     self.navigator.cancelTask()
                     break
-                time.sleep(0.5)
 
+                target_room = RAW_ROOMS[idx]
+                self.log_msg(f"---> Trạm {i+1}: Tiến về {target_room['name']}")
+                
+                pose = PoseStamped()
+                pose.header.frame_id = 'map'
+                pose.header.stamp = self.node.get_clock().now().to_msg()
+                pose.pose.position.x = float(target_room["x"])
+                pose.pose.position.y = float(target_room["y"])
+                pose.pose.orientation.w = 1.0 
+
+                self.navigator.goToPose(pose)
+
+                while not self.navigator.isTaskComplete():
+                    if self.stop_auto_flag:
+                        self.navigator.cancelTask()
+                        break
+                    time.sleep(0.5)
+
+                if not self.stop_auto_flag:
+                    res = self.navigator.getResult()
+                    if res == TaskResult.SUCCEEDED:
+                        self.log_msg(f"✅ Đã đến: {target_room['name']}")
+                        self.update_robot_pose()
+                        
+                        remaining_route = route_indices[i+1:]
+                        self.root.after(0, lambda r=remaining_route: self.draw_map(r))
+                    else:
+                        self.log_msg(f"❌ Thất bại tại: {target_room['name']}")
+                        break
+        finally:
+            elapsed = time.time() - self.run_start_time
+            mins = int(elapsed // 60)
+            secs = int(elapsed % 60)
+            self.log_msg(f"⏱️ Tổng thời gian chạy: {mins:02d} phút {secs:02d} giây")
             if not self.stop_auto_flag:
-                res = self.navigator.getResult()
-                if res == TaskResult.SUCCEEDED:
-                    self.log_msg(f"✅ Đã đến: {target_room['name']}")
-                    self.update_robot_pose()
-                else:
-                    self.log_msg(f"❌ Thất bại tại: {target_room['name']}")
-                    break
-
-        self.log_msg("🏁 Hoàn thành chuyến đi.")
+                self.log_msg("🏁 Hoàn thành chuyến đi.")
 
     def stop_all(self):
         self.stop_auto_flag = True
@@ -374,23 +471,15 @@ class RobotGUI:
         self.log_msg("🛑 ĐÃ DỪNG XE!")
 
     def draw_map(self, route_indices=None):
-        """ Hàm vẽ Map, có nhận thêm List lộ trình để nối vạch """
         self.ax.clear()
-        
         if os.path.exists(MAP_IMAGE_PATH):
             try:
                 img = mpimg.imread(MAP_IMAGE_PATH)
-                
-                # 🔥 LẬT THEO TRỤC DỌC (Trên-Dưới / Hướng Lên)
                 img = np.flipud(img) 
-                
                 h, w = img.shape
                 width_m = w * MAP_RESOLUTION
                 height_m = h * MAP_RESOLUTION
-                
-                extent = [MAP_ORIGIN[0], MAP_ORIGIN[0] + width_m, 
-                          MAP_ORIGIN[1], MAP_ORIGIN[1] + height_m]
-                
+                extent = [MAP_ORIGIN[0], MAP_ORIGIN[0] + width_m, MAP_ORIGIN[1], MAP_ORIGIN[1] + height_m]
                 self.ax.imshow(img, cmap='gray', extent=extent, origin='lower')
             except Exception as e:
                 self.log_msg(f"⚠️ Lỗi ảnh: {e}")
@@ -407,15 +496,13 @@ class RobotGUI:
                 self.ax.text(room["x"] + 0.5, room["y"] + 0.5, room["name"], color='blue', fontsize=8,
                              bbox=dict(facecolor='white', alpha=0.5, edgecolor='none'))
 
-        # 🔥 NẾU CÓ ROUTE THÌ VẼ LINE VÀ ĐÁNH SỐ
-        if route_indices:
+        if route_indices and len(route_indices) > 1:
             rx = [RAW_ROOMS[i]["x"] for i in route_indices]
             ry = [RAW_ROOMS[i]["y"] for i in route_indices]
             self.ax.plot(rx, ry, color='green', linestyle='-', linewidth=2.5, marker='o', zorder=4)
             
-            # Đánh số thứ tự trạm (1, 2, 3...)
             for step, idx in enumerate(route_indices):
-                if step == 0: continue # Bỏ qua điểm xuất phát
+                if step == 0: continue 
                 self.ax.text(RAW_ROOMS[idx]["x"] - 0.5, RAW_ROOMS[idx]["y"] - 1.5, f"({step})", 
                              color='green', fontweight='bold', fontsize=10,
                              bbox=dict(facecolor='yellow', alpha=0.8, edgecolor='none', pad=1))
@@ -429,11 +516,9 @@ class RobotGUI:
 def main():
     rclpy.init()
     ros_node = RobotControllerNode()
-
     from rclpy.executors import SingleThreadedExecutor
     executor = SingleThreadedExecutor()
     executor.add_node(ros_node)
-
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()
 
