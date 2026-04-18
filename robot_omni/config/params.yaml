@@ -478,7 +478,7 @@ collision_monitor:
       slowdown_ratio: 0.5
       visualize: True
       polygon_pub_topic: "polygon_slowdown"
-      enabled: true
+      enabled: false
 
     PolygonLimit:
       type: "polygon"
@@ -489,7 +489,7 @@ collision_monitor:
       angular_limit: 1.0
       visualize: True
       polygon_pub_topic: "polygon_limit"
-      enabled: True
+      enabled: false
 
     FootprintApproach:
       type: "polygon"
